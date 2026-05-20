@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a2e">
+<meta name="description" content="摸鱼终结者 v4 - 随机爆笑动画鞭策你干正事！番茄钟+社交分享+收集养成+主题商店+摇一摇+盲盒嘲讽。">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>无聊了么 · 摸鱼终结者 v4</title>
+<style>
+/* ============================================================
+   CSS Variables & Themes
+   ============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { overflow: hidden; }
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --accent: #FF6B35; --accent2: #FF3B8B; --gold: #FFD700;
+  --green: #00FF88; --cyan: #00AAFF; --magenta: #FF00FF;
+  --text: #fff; --muted: rgba(255,255,255,0.5);
+  --surface: rgba(255,255,255,0.06);
+  --surface-border: rgba(255,255,255,0.1);
+  --bg: #0a0a2e;
+  --bg-grad: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 25%, #2d0a4e 50%, #1a0540 75%, #0a0a2e 100%);
+}
+
+/* 5 Themes */
+body[data-theme="default"] { --accent:#FF6B35; --accent2:#FF3B8B; --gold:#FFD700; --bg:#0a0a2e; --bg-grad:linear-gradient(135deg,#0a0a2e,#1a0a3e,#2d0a4e,#1a0540,#0a0a2e); }
+body[data-theme="cyberpunk"] { --accent:#00FF41; --accent2:#00CCFF; --gold:#FFD700; --bg:#000a00; --bg-grad:linear-gradient(135deg,#000a00,#001a00,#002200,#001100,#000a00); }
+body[data-theme="retro"] { --accent:#FF6600; --accent2:#FFCC00; --gold:#FFCC00; --bg:#1a1a00; --bg-grad:linear-gradient(135deg,#1a1a00,#2a1a00,#3a2a00,#1a1a00,#1a1a00); }
+body[data-theme="zen"] { --accent:#88CCAA; --accent2:#AADDBB; --gold:#CCEEAA; --bg:#0a1a10; --bg-grad:linear-gradient(135deg,#0a1a10,#0a2010,#0a2510,#0a1a10,#0a1a10); }
+body[data-theme="candy"] { --accent:#FF69B4; --accent2:#FFB6C1; --gold:#FFD700; --bg:#1a0a20; --bg-grad:linear-gradient(135deg,#1a0a20,#2a0a30,#3a0a40,#2a0a30,#1a0a20); }
+
+body.dark-mode { --bg:#050510; --bg-grad:linear-gradient(135deg,#050510,#100520,#1a001a,#050510,#050510); }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', sans-serif;
+  width: 100vw; height: 100vh; height: 100dvh;
+  overflow: hidden; background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  touch-action: manipulation; transition: background .5s;
+}
+
+/* ============================================================ Layers ============================================================ */
+.bg-layer { position:fixed; inset:0; z-index:0; background: var(--bg-grad); transition: background .5s; }
+.particles { position:fixed; inset:0; z-index:1; pointer-events:none; }
+.fx-layer { position:fixed; inset:0; z-index:50; pointer-events:none; }
+.screen-flash { position:fixed; inset:0; z-index:100; pointer-events:none; background:transparent; transition:background .1s; }
+
+/* ============================================================ Top Bar ============================================================ */
+.top-bar { position:fixed; top:calc(10px + var(--safe-top)); left:12px; right:12px; z-index:200; display:flex; align-items:center; justify-content:space-between; }
+.brand { display:flex; align-items:center; gap:8px; }
+.brand-icon { width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 0 18px rgba(255,107,53,.35); transition:all .3s; }
+.brand-icon.shaking { animation:brandShake .3s ease-in-out 3; }
+@keyframes brandShake { 0%,100%{ transform:rotate(0); } 25%{ transform:rotate(-15deg); } 75%{ transform:rotate(15deg); } }
+.brand-name { color:var(--text); font-size:15px; font-weight:800; letter-spacing:2px; }
+.top-actions { display:flex; gap:6px; }
+.icon-btn { width:36px; height:36px; border-radius:50%; background:var(--surface); border:1px solid var(--surface-border); color:var(--text); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); transition:all .2s; }
+.icon-btn:active { transform:scale(.9); background:rgba(255,255,255,.2); }
+.icon-btn.has-badge { position:relative; }
+.icon-btn.has-badge::after { content:''; position:absolute; top:4px; right:4px; width:7px; height:7px; border-radius:50%; background:var(--accent2); }
+
+/* ============================================================ Idle Timer ============================================================ */
+.idle-timer { position:fixed; top:calc(65px + var(--safe-top)); left:50%; transform:translateX(-50%); z-index:200; background:var(--surface); backdrop-filter:blur(8px); border:1px solid var(--surface-border); border-radius:14px; padding:4px 14px; color:var(--muted); font-size:11px; font-weight:600; letter-spacing:1px; opacity:0; transition:opacity .4s; }
+.idle-timer.visible { opacity:1; }
+.idle-timer.warning { color:var(--accent); border-color:rgba(255,107,53,.5); }
+
+/* ============================================================ Main Stage ============================================================ */
+.app-container { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:var(--safe-top); padding-bottom:var(--safe-bottom); }
+.stage { position:relative; width:340px; height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; perspective:800px; }
+.main-text { position:relative; z-index:20; font-size:44px; font-weight:900; color:var(--text); text-align:center; line-height:1.3; text-shadow:0 0 30px rgba(255,107,53,.8),0 0 60px rgba(255,59,139,.6),0 0 90px rgba(255,200,0,.4),0 4px 8px rgba(0,0,0,.6); letter-spacing:2px; cursor:pointer; transition:filter .3s; -webkit-text-stroke:1.5px rgba(0,0,0,.3); paint-order:stroke fill; max-width:90vw; word-break:keep-all; }
+.main-text:active { filter:brightness(1.3); }
+.slogan-sub { margin-top:12px; z-index:20; font-size:13px; color:var(--muted); letter-spacing:3px; text-align:center; transition:all .3s; }
+
+/* ============================================================ Post Actions ============================================================ */
+.post-actions { position:fixed; bottom:calc(110px + var(--safe-bottom)); left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; opacity:0; pointer-events:none; transition:opacity .4s .3s; width:270px; }
+.post-actions.show { opacity:1; pointer-events:auto; }
+.action-btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 20px; border-radius:50px; border:none; cursor:pointer; font-size:14px; font-weight:700; letter-spacing:1px; transition:all .25s; }
+.action-btn:active { transform:scale(.95); }
+.btn-pomodoro { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; box-shadow:0 6px 20px rgba(255,107,53,.35); }
+.btn-share { background:var(--surface); color:var(--text); border:1.5px solid var(--surface-border); backdrop-filter:blur(8px); }
+.btn-skip { background:transparent; color:var(--muted); font-size:12px; font-weight:500; }
+
+/* ============================================================ Pomodoro Duration Picker ============================================================ */
+.duration-picker { display:flex; gap:4px; justify-content:center; margin-bottom:4px; }
+.dur-opt { padding:6px 12px; border-radius:20px; background:var(--surface); border:1px solid var(--surface-border); color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; letter-spacing:1px; }
+.dur-opt:active { transform:scale(.95); }
+.dur-opt.sel { background:rgba(255,107,53,.2); border-color:var(--accent); color:var(--accent); }
+
+/* ============================================================ Bottom Bar ============================================================ */
+.bottom-bar { position:fixed; bottom:calc(30px + var(--safe-bottom)); left:50%; transform:translateX(-50%); z-index:30; display:flex; gap:8px; }
+.pill-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 20px; border-radius:50px; background:var(--surface); border:1.5px solid var(--surface-border); color:var(--text); font-size:13px; font-weight:600; cursor:pointer; letter-spacing:1px; backdrop-filter:blur(8px); transition:all .2s; }
+.pill-btn:active { transform:scale(.95); background:rgba(255,255,255,.15); }
+.pill-btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; box-shadow:0 4px 16px rgba(255,107,53,.3); }
+
+/* ============================================================ Pomodoro Overlay ============================================================ */
+.pomodoro-overlay { position:fixed; inset:0; z-index:300; background:rgba(5,5,16,.96); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s; }
+.pomodoro-overlay.show { opacity:1; pointer-events:auto; }
+.pomo-ring { position:relative; width:180px; height:180px; }
+.pomo-ring svg { transform:rotate(-90deg); }
+.pomo-ring .bg-circle { fill:none; stroke:rgba(255,255,255,.08); stroke-width:6; }
+.pomo-ring .fg-circle { fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke 2s; }
+.pomo-ring .fg-circle.break { stroke:var(--green); }
+.pomo-time { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text); font-size:48px; font-weight:900; letter-spacing:2px; }
+.pomo-label { font-size:13px; font-weight:600; color:var(--muted); letter-spacing:3px; margin-top:3px; }
+.pomo-break-tip { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:11px; white-space:nowrap; opacity:0; transition:opacity .5s; letter-spacing:1px; }
+.pomo-break-tip.show { opacity:1; }
+.pomo-controls { display:flex; gap:10px; margin-top:20px; }
+.pomo-ctrl { width:44px; height:44px; border-radius:50%; background:var(--surface); border:1.5px solid var(--surface-border); color:var(--text); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.pomo-ctrl:active { transform:scale(.9); background:rgba(255,255,255,.2); }
+.pomo-sessions { margin-top:14px; color:var(--muted); font-size:12px; letter-spacing:1px; }
+.dur-picker-inline { margin-top:12px; }
+
+/* ============================================================ Share Modal ============================================================ */
+.share-modal { position:fixed; inset:0; z-index:400; background:rgba(0,0,0,.88); backdrop-filter:blur(10px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s; }
+.share-modal.show { opacity:1; pointer-events:auto; }
+.share-card-container { position:relative; border-radius:18px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.5); max-width:88vw; }
+.share-card-container canvas { display:block; width:100%; height:auto; }
+.share-actions { display:flex; gap:10px; margin-top:16px; }
+.share-act-btn { padding:10px 20px; border-radius:50px; border:none; cursor:pointer; font-size:13px; font-weight:700; letter-spacing:1px; transition:all .2s; }
+.share-act-btn:active { transform:scale(.95); }
+.share-save { background:var(--accent); color:#fff; }
+.share-native { background:var(--green); color:#000; }
+.share-close { background:var(--surface); color:var(--text); }
+
+/* ============================================================ Collection Page ============================================================ */
+.collection-page { position:fixed; inset:0; z-index:350; background:rgba(5,5,16,.98); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .3s; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(55px + var(--safe-top)) 16px calc(35px + var(--safe-bottom)); }
+.collection-page.show { opacity:1; pointer-events:auto; }
+.collection-header { text-align:center; margin-bottom:20px; }
+.collection-header h2 { font-size:22px; font-weight:900; color:var(--text); letter-spacing:2px; }
+.collection-header p { color:var(--muted); font-size:12px; margin-top:4px; }
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; max-width:350px; }
+.stat-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px; text-align:center; }
+.stat-card .stat-val { font-size:26px; font-weight:900; color:var(--accent); }
+.stat-card .stat-lbl { font-size:10px; color:var(--muted); margin-top:3px; letter-spacing:1px; }
+.badge-section { margin-top:16px; width:100%; max-width:350px; }
+.badge-section h3 { font-size:15px; color:var(--text); letter-spacing:2px; margin-bottom:8px; text-align:center; }
+.badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.badge { width:68px; height:68px; border-radius:18px; background:var(--surface); border:2px solid var(--surface-border); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:26px; transition:all .3s; }
+.badge.unlocked { border-color:var(--gold); background:rgba(255,215,0,.12); box-shadow:0 0 16px rgba(255,215,0,.18); }
+.badge.locked { opacity:.2; filter:grayscale(1); }
+.badge .badge-id { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:1px; }
+.anim-grid { margin-top:16px; width:100%; max-width:350px; }
+.anim-grid h3 { font-size:15px; color:var(--text); letter-spacing:2px; margin-bottom:8px; text-align:center; }
+.anim-list { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.anim-item { display:flex; align-items:center; gap:6px; padding:8px 10px; background:rgba(255,255,255,.04); border-radius:10px; font-size:12px; color:var(--text); }
+.anim-item.unseen { opacity:.3; }
+.anim-item.secret { border:1px dashed rgba(255,215,0,.25); }
+.close-collection { margin-top:18px; padding:10px 28px; border-radius:50px; background:var(--surface); border:none; color:var(--text); font-size:13px; font-weight:600; cursor:pointer; letter-spacing:1px; }
+
+/* ============================================================ Blind Box Overlay ============================================================ */
+.blind-box-overlay { position:fixed; inset:0; z-index:380; background:rgba(5,5,16,.97); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s; }
+.blind-box-overlay.show { opacity:1; pointer-events:auto; }
+.bb-box-wrap { position:relative; width:180px; height:180px; margin-bottom:24px; cursor:pointer; }
+.bb-box { width:100%; height:100%; border-radius:24px; background:linear-gradient(135deg,#FF6B35,#FF3B8B,#FFD700); display:flex; align-items:center; justify-content:center; font-size:72px; box-shadow:0 0 40px rgba(255,107,53,.4),0 0 80px rgba(255,59,139,.2); transition:all .3s; position:relative; overflow:hidden; }
+.bb-box::before { content:''; position:absolute; inset:0; background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.3) 50%,transparent 60%); animation:bbShine 2s infinite; }
+@keyframes bbShine { 0%{ transform:translateX(-100%) translateY(-100%); } 100%{ transform:translateX(100%) translateY(100%); } }
+.bb-box:active { transform:scale(.92); }
+.bb-box.opening { animation:bbOpen .8s ease-in-out forwards; }
+@keyframes bbOpen { 0%{ transform:scale(1) rotate(0); } 20%{ transform:scale(1.15) rotate(-5deg); } 40%{ transform:scale(.8) rotate(5deg); } 60%{ transform:scale(1.2) rotate(-3deg); } 80%{ transform:scale(.6) rotate(10deg); opacity:.5; } 100%{ transform:scale(0) rotate(30deg); opacity:0; } }
+.bb-box-label { color:var(--muted); font-size:13px; letter-spacing:3px; margin-bottom:16px; text-align:center; }
+.bb-glow { position:absolute; inset:-20px; border-radius:40px; background:radial-gradient(circle,rgba(255,107,53,.3) 0%,transparent 70%); animation:bbGlow 2s ease-in-out infinite; pointer-events:none; }
+@keyframes bbGlow { 0%,100%{ transform:scale(1); opacity:.5; } 50%{ transform:scale(1.1); opacity:1; } }
+
+/* Roast Card */
+.roast-card { position:fixed; inset:0; z-index:390; background:rgba(5,5,16,.98); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s; padding:20px; }
+.roast-card.show { opacity:1; pointer-events:auto; }
+.roast-emoji-big { font-size:80px; margin-bottom:16px; }
+.roast-title { font-size:28px; font-weight:900; color:var(--text); text-align:center; line-height:1.4; max-width:85vw; margin-bottom:8px; }
+.roast-subtitle { font-size:16px; color:var(--accent); font-weight:700; text-align:center; margin-bottom:24px; line-height:1.5; }
+.roast-tag { display:inline-block; padding:4px 14px; border-radius:20px; background:var(--surface); border:1px solid var(--surface-border); color:var(--muted); font-size:11px; letter-spacing:1px; margin-bottom:24px; }
+.roast-actions { display:flex; gap:10px; }
+.roast-act-btn { padding:10px 22px; border-radius:50px; border:none; cursor:pointer; font-size:13px; font-weight:700; letter-spacing:1px; transition:all .2s; }
+.roast-act-btn:active { transform:scale(.95); }
+.roast-share-btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+.roast-again-btn { background:var(--surface); color:var(--text); border:1.5px solid var(--surface-border); }
+.roast-close-btn { background:transparent; color:var(--muted); font-size:12px; }
+
+/* Roast entry animations */
+@keyframes roastSlam { 0%{ transform:scale(0) rotate(-20deg); opacity:0; } 40%{ transform:scale(1.4) rotate(5deg); } 60%{ transform:scale(.9) rotate(-2deg); } 80%{ transform:scale(1.05); } 100%{ transform:scale(1) rotate(0); opacity:1; } }
+@keyframes roastBounce { 0%{ transform:translateY(100vh) scale(.3); opacity:0; } 50%{ transform:translateY(-30px) scale(1.1); opacity:1; } 70%{ transform:translateY(10px) scale(.95); } 85%{ transform:translateY(-5px); } 100%{ transform:translateY(0) scale(1); } }
+@keyframes roastSpin { 0%{ transform:rotateY(180deg) scale(0); opacity:0; } 50%{ transform:rotateY(0) scale(1.2); opacity:1; } 70%{ transform:rotateY(-10deg) scale(.9); } 100%{ transform:rotateY(0) scale(1); } }
+@keyframes roastDrop { 0%{ transform:translateY(-200px) rotate(15deg); opacity:0; } 60%{ transform:translateY(20px) rotate(-5deg); opacity:1; } 80%{ transform:translateY(-10px) rotate(2deg); } 100%{ transform:translateY(0) rotate(0); } }
+@keyframes roastJello { 0%{ transform:scale(0) skewX(20deg); } 30%{ transform:scale(1.2) skewX(-10deg); } 50%{ transform:scale(.9) skewX(5deg); } 70%{ transform:scale(1.05) skewX(-2deg); } 100%{ transform:scale(1) skewX(0); } }
+@keyframes roastFlip { 0%{ transform:perspective(400px) rotateX(90deg); opacity:0; } 40%{ transform:perspective(400px) rotateX(-10deg); opacity:1; } 60%{ transform:perspective(400px) rotateX(5deg); } 100%{ transform:perspective(400px) rotateX(0); } }
+@keyframes roastShake { 0%,100%{ transform:translate(0) scale(1); opacity:0; } 10%{ opacity:1; } 15%{ transform:translate(-15px,8px) scale(1.1); } 30%{ transform:translate(12px,-6px) scale(1.05); } 45%{ transform:translate(-8px,-10px) scale(1.15); } 60%{ transform:translate(14px,5px) scale(1); } 75%{ transform:translate(-6px,4px) scale(1.02); } }
+@keyframes roastZoom { 0%{ transform:scale(0) blur(20px); opacity:0; } 60%{ transform:scale(1.3) blur(0); opacity:1; } 80%{ transform:scale(.9); } 100%{ transform:scale(1); } }
+@keyframes roastFloat { 0%{ transform:translateY(100px) scale(.5) rotate(10deg); opacity:0; } 40%{ transform:translateY(-20px) scale(1.1) rotate(-5deg); opacity:1; } 60%{ transform:translateY(10px) scale(.95) rotate(2deg); } 80%{ transform:translateY(-5px) scale(1.02); } 100%{ transform:translateY(0) scale(1) rotate(0); } }
+@keyframes roastGlitch { 0%{ transform:translate(0) scale(1); opacity:0; clip-path:inset(0); } 10%{ opacity:1; transform:translate(-8px,3px); clip-path:inset(20% 0 60% 0); } 25%{ transform:translate(8px,-2px); clip-path:inset(50% 0 10% 0); } 40%{ transform:translate(-3px,5px); clip-path:inset(10% 0 70% 0); } 55%{ transform:translate(0); clip-path:inset(0); } 70%{ transform:scale(1.05); } 100%{ transform:scale(1); clip-path:inset(0); } }
+@keyframes roastSwing { 0%{ transform:rotate(0deg) scale(0); opacity:0; transform-origin:top center; } 30%{ transform:rotate(15deg) scale(1.1); opacity:1; } 50%{ transform:rotate(-12deg); } 70%{ transform:rotate(8deg); } 85%{ transform:rotate(-4deg); } 100%{ transform:rotate(0deg) scale(1); } }
+@keyframes roastMorph { 0%{ transform:scale(0) rotate(0); border-radius:50%; opacity:0; } 30%{ transform:scale(1.3) rotate(180deg); border-radius:20%; opacity:1; } 50%{ transform:scale(.8) rotate(360deg); border-radius:40%; } 70%{ transform:scale(1.1) rotate(300deg); border-radius:15%; } 100%{ transform:scale(1) rotate(360deg); border-radius:0; opacity:1; } }
+@keyframes roastElastic { 0%{ transform:scaleX(0) scaleY(1.5); opacity:0; } 25%{ transform:scaleX(1.3) scaleY(.7); opacity:1; } 50%{ transform:scaleX(.85) scaleY(1.15); } 75%{ transform:scaleX(1.08) scaleY(.93); } 100%{ transform:scaleX(1) scaleY(1); } }
+@keyframes roastReveal { 0%{ clip-path:inset(0 50% 0 50%); opacity:0; } 30%{ clip-path:inset(0 48% 0 48%); opacity:1; } 60%{ clip-path:inset(0 5% 0 5%); } 80%{ clip-path:inset(0 0 0 0); transform:scale(1.05); } 100%{ clip-path:inset(0 0 0 0); transform:scale(1); } }
+@keyframes roastPunch { 0%{ transform:translateX(-300px) scale(.5) rotate(-15deg); opacity:0; } 50%{ transform:translateX(20px) scale(1.2) rotate(5deg); opacity:1; } 70%{ transform:translateX(-8px) scale(.95); } 85%{ transform:translateX(4px) scale(1.02); } 100%{ transform:translateX(0) scale(1) rotate(0); } }
+@keyframes roastUnfold { 0%{ transform:scaleY(0) rotateX(90deg); opacity:0; } 40%{ transform:scaleY(1.2) rotateX(-10deg); opacity:1; } 60%{ transform:scaleY(.9) rotateX(5deg); } 80%{ transform:scaleY(1.05) rotateX(-2deg); } 100%{ transform:scaleY(1) rotateX(0); } }
+@keyframes roastTwist { 0%{ transform:rotate(0) scale(0) translateX(-200px); opacity:0; } 40%{ transform:rotate(720deg) scale(1.1) translateX(0); opacity:1; } 60%{ transform:rotate(680deg) scale(.95); } 80%{ transform:rotate(710deg) scale(1.02); } 100%{ transform:rotate(720deg) scale(1); } }
+@keyframes roastRise { 0%{ transform:scale(.2) translateY(200px); opacity:0; filter:blur(10px); } 50%{ transform:scale(1.1) translateY(-10px); opacity:1; filter:blur(0); } 70%{ transform:scale(.95) translateY(5px); } 100%{ transform:scale(1) translateY(0); } }
+@keyframes roastExplode { 0%{ transform:scale(0); opacity:0; } 30%{ transform:scale(1.6); opacity:1; } 50%{ transform:scale(.7); } 65%{ transform:scale(1.2); } 80%{ transform:scale(.9); } 100%{ transform:scale(1); } }
+@keyframes roastRocket { 0%{ transform:translateY(300px) scale(.4); opacity:0; } 20%{ opacity:1; } 60%{ transform:translateY(-40px) scale(1.15); } 75%{ transform:translateY(15px) scale(.9); } 90%{ transform:translateY(-5px) scale(1.05); } 100%{ transform:translateY(0) scale(1); } }
+@keyframes roastDrill { 0%{ transform:translateY(-300px) rotate(0); opacity:0; } 30%{ opacity:1; } 70%{ transform:translateY(20px) rotate(1080deg); } 85%{ transform:translateY(-10px) rotate(1020deg); } 100%{ transform:translateY(0) rotate(1080deg); } }
+@keyframes roastLightning { 0%{ opacity:0; transform:scale(.5); } 10%{ opacity:1; transform:scale(1.3); } 15%{ opacity:0; transform:scale(.8); } 20%{ opacity:1; transform:scale(1.15); } 25%{ opacity:0; transform:scale(.9); } 35%{ opacity:1; transform:scale(1.1); } 50%{ transform:scale(.95); } 70%{ transform:scale(1.05); } 100%{ transform:scale(1); opacity:1; } }
+@keyframes roastSpiral { 0%{ transform:rotate(0) scale(0) translateY(200px); opacity:0; } 30%{ transform:rotate(360deg) scale(1.2) translateY(0); opacity:1; } 50%{ transform:rotate(540deg) scale(.8); } 70%{ transform:rotate(660deg) scale(1.1); } 100%{ transform:rotate(720deg) scale(1); } }
+@keyframes roastMeteor { 0%{ transform:translate(400px,-300px) rotate(45deg) scale(.3); opacity:0; } 40%{ transform:translate(20px,10px) rotate(0) scale(1.2); opacity:1; } 60%{ transform:translate(-8px,-5px) scale(.9); } 80%{ transform:translate(4px,2px) scale(1.05); } 100%{ transform:translate(0,0) scale(1) rotate(0); } }
+@keyframes roastMagnet { 0%{ transform:translateX(0) scale(1); opacity:0; } 25%{ transform:translateX(-100px) scale(.8); opacity:.5; } 50%{ transform:translateX(60px) scale(1.3); opacity:1; } 65%{ transform:translateX(-40px) scale(.85); } 80%{ transform:translateX(15px) scale(1.1); } 100%{ transform:translateX(0) scale(1); opacity:1; } }
+@keyframes roastNinja { 0%{ opacity:0; transform:scale(3) blur(10px); } 20%{ opacity:1; transform:scale(1) blur(0); } 25%{ opacity:0; transform:scale(1.3); } 30%{ opacity:1; transform:scale(1); } 35%{ opacity:0; } 50%{ opacity:1; transform:scale(1.05); } 100%{ opacity:1; transform:scale(1); } }
+@keyframes roastWave { 0%{ transform:translateX(-200px) rotate(-30deg); opacity:0; } 20%{ transform:translateX(0) rotate(10deg); opacity:1; } 40%{ transform:translateX(10px) rotate(-8deg); } 60%{ transform:translateX(-5px) rotate(5deg); } 80%{ transform:translateX(3px) rotate(-2deg); } 100%{ transform:translateX(0) rotate(0); } }
+@keyframes roastPortal { 0%{ transform:scale(0) rotateY(360deg); opacity:0; filter:hue-rotate(0deg); } 40%{ transform:scale(1.3) rotateY(180deg); opacity:1; filter:hue-rotate(180deg); } 60%{ transform:scale(.7) rotateY(90deg); filter:hue-rotate(270deg); } 80%{ transform:scale(1.1) rotateY(20deg); filter:hue-rotate(330deg); } 100%{ transform:scale(1) rotateY(0); filter:hue-rotate(360deg); } }
+@keyframes roastBean { 0%{ transform:scale(0) skewY(30deg); opacity:0; } 25%{ transform:scale(1.3) skewY(-15deg); opacity:1; } 45%{ transform:scale(.8) skewY(8deg); } 60%{ transform:scale(1.15) skewY(-4deg); } 75%{ transform:scale(.95) skewY(2deg); } 100%{ transform:scale(1) skewY(0); } }
+@keyframes roastSpring { 0%{ transform:scaleY(0) scaleX(1.5); opacity:0; } 30%{ transform:scaleY(1.4) scaleX(.7); opacity:1; } 50%{ transform:scaleY(.7) scaleX(1.2); } 70%{ transform:scaleY(1.15) scaleX(.9); } 85%{ transform:scaleY(.95) scaleX(1.03); } 100%{ transform:scaleY(1) scaleX(1); } }
+@keyframes roastWhip { 0%{ transform:translateX(-300px) scaleX(.3) scaleY(1.5); opacity:0; } 40%{ transform:translateX(30px) scaleX(1.3) scaleY(.8); opacity:1; } 60%{ transform:translateX(-15px) scaleX(.9) scaleY(1.1); } 80%{ transform:translateX(5px) scaleX(1.05) scaleY(.95); } 100%{ transform:translateX(0) scaleX(1) scaleY(1); } }
+@keyframes roastUltimate { 0%{ transform:scale(0) rotate(720deg); opacity:0; filter:blur(30px) hue-rotate(0deg); } 30%{ transform:scale(1.8) rotate(-20deg); opacity:1; filter:blur(0) hue-rotate(180deg); } 50%{ transform:scale(.5) rotate(10deg); filter:hue-rotate(360deg); } 70%{ transform:scale(1.3) rotate(-5deg); } 85%{ transform:scale(.95) rotate(2deg); } 100%{ transform:scale(1) rotate(0); filter:hue-rotate(360deg); } }
+
+/* Blind box collection counter */
+.bb-counter { position:fixed; top:calc(65px + var(--safe-top)); right:12px; z-index:200; background:linear-gradient(135deg,var(--gold),#FF6B35); border-radius:12px; padding:3px 10px; font-size:11px; font-weight:800; color:#000; letter-spacing:1px; opacity:0; pointer-events:none; transition:opacity .4s; }
+.bb-counter.show { opacity:1; }
+
+/* Collection Page - blind box section */
+.bb-collection { margin-top:16px; width:100%; max-width:350px; }
+.bb-collection h3 { font-size:15px; color:var(--text); letter-spacing:2px; margin-bottom:8px; text-align:center; }
+.bb-roast-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+.bb-roast-item { display:flex; align-items:center; gap:6px; padding:8px 10px; background:rgba(255,255,255,.04); border-radius:10px; font-size:11px; color:var(--text); }
+.bb-roast-item.collected { border:1px solid rgba(255,215,0,.2); }
+.bb-roast-item.unseen { opacity:.3; }
+
+/* ============================================================ Custom Roast Editor & Gift ============================================================ */
+.bb-editor-overlay { position:fixed; inset:0; z-index:395; background:rgba(5,5,16,.98); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .3s; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(50px + var(--safe-top)) 20px calc(30px + var(--safe-bottom)); }
+.bb-editor-overlay.show { opacity:1; pointer-events:auto; }
+.bb-editor-title { font-size:20px; font-weight:900; color:var(--text); letter-spacing:2px; margin-bottom:20px; }
+.bb-form { width:100%; max-width:340px; }
+.bb-form-group { margin-bottom:14px; }
+.bb-form-label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; letter-spacing:1px; }
+.bb-form-input { width:100%; padding:10px 14px; border-radius:12px; background:var(--surface); border:1.5px solid var(--surface-border); color:var(--text); font-size:14px; outline:none; transition:border-color .2s; }
+.bb-form-input:focus { border-color:var(--accent); }
+.bb-form-input::placeholder { color:rgba(255,255,255,.2); }
+.bb-form-textarea { resize:none; height:60px; font-family:inherit; }
+.bb-emoji-picker { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.bb-emoji-opt { width:40px; height:40px; border-radius:10px; background:var(--surface); border:1.5px solid var(--surface-border); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.bb-emoji-opt:active { transform:scale(.9); }
+.bb-emoji-opt.sel { border-color:var(--accent); background:rgba(255,107,53,.15); }
+.bb-color-picker { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.bb-color-opt { width:32px; height:32px; border-radius:50%; cursor:pointer; border:2.5px solid transparent; transition:all .2s; }
+.bb-color-opt.sel { border-color:#fff; transform:scale(1.15); }
+.bb-anim-picker { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
+.bb-anim-opt { padding:5px 10px; border-radius:8px; background:var(--surface); border:1px solid var(--surface-border); color:var(--text); font-size:11px; cursor:pointer; transition:all .2s; }
+.bb-anim-opt.sel { border-color:var(--accent); color:var(--accent); }
+.bb-form-actions { display:flex; gap:8px; margin-top:18px; justify-content:center; }
+.bb-form-btn { padding:10px 24px; border-radius:50px; border:none; cursor:pointer; font-size:13px; font-weight:700; letter-spacing:1px; transition:all .2s; }
+.bb-form-btn:active { transform:scale(.95); }
+.bb-form-btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+.bb-form-btn.secondary { background:var(--surface); color:var(--text); border:1.5px solid var(--surface-border); }
+.bb-form-btn.danger { background:rgba(255,59,59,.15); color:#ff5555; border:1.5px solid rgba(255,59,59,.3); font-size:12px; }
+
+/* Custom roast list */
+.bb-custom-list { width:100%; max-width:340px; margin-top:16px; }
+.bb-custom-list h3 { font-size:14px; color:var(--text); letter-spacing:1px; margin-bottom:8px; }
+.bb-custom-item { display:flex; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,.04); border-radius:10px; margin-bottom:6px; }
+.bb-custom-item .item-emoji { font-size:22px; }
+.bb-custom-item .item-info { flex:1; overflow:hidden; }
+.bb-custom-item .item-title { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bb-custom-item .item-sub { font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bb-custom-item .item-actions { display:flex; gap:4px; }
+.bb-item-btn { width:30px; height:30px; border-radius:8px; background:var(--surface); border:1px solid var(--surface-border); color:var(--text); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.bb-item-btn:active { transform:scale(.9); }
+.bb-item-btn.gift { color:var(--gold); }
+.bb-item-btn.del { color:#ff5555; }
+.bb-custom-empty { text-align:center; color:var(--muted); font-size:13px; padding:20px 0; }
+
+/* Gift overlay */
+.bb-gift-overlay { position:fixed; inset:0; z-index:396; background:rgba(5,5,16,.98); backdrop-filter:blur(20px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s; padding:20px; }
+.bb-gift-overlay.show { opacity:1; pointer-events:auto; }
+.gift-card { width:100%; max-width:340px; background:var(--surface); border:1.5px solid var(--surface-border); border-radius:20px; padding:24px; text-align:center; }
+.gift-card-emoji { font-size:56px; margin-bottom:12px; }
+.gift-card-title { font-size:18px; font-weight:900; color:var(--text); margin-bottom:6px; }
+.gift-card-sub { font-size:13px; color:var(--accent); margin-bottom:16px; line-height:1.4; }
+.gift-card-from { font-size:12px; color:var(--muted); margin-bottom:16px; }
+.gift-card-code { font-family:monospace; font-size:16px; font-weight:900; color:var(--gold); background:rgba(255,215,0,.08); border:1.5px dashed rgba(255,215,0,.3); border-radius:12px; padding:10px 16px; letter-spacing:2px; margin-bottom:16px; word-break:break-all; cursor:pointer; user-select:all; }
+.gift-card-hint { font-size:11px; color:var(--muted); margin-bottom:12px; }
+.gift-card-received { font-size:14px; color:var(--green); font-weight:700; margin-bottom:12px; }
+
+/* Redeem section */
+.bb-redeem { width:100%; max-width:340px; margin-top:16px; text-align:center; }
+.bb-redeem h3 { font-size:14px; color:var(--text); letter-spacing:1px; margin-bottom:8px; }
+.bb-redeem-row { display:flex; gap:6px; }
+.bb-redeem-input { flex:1; padding:10px 14px; border-radius:12px; background:var(--surface); border:1.5px solid var(--surface-border); color:var(--text); font-size:13px; font-family:monospace; outline:none; }
+.bb-redeem-input:focus { border-color:var(--accent); }
+.bb-redeem-input::placeholder { color:rgba(255,255,255,.2); }
+.bb-redeem-btn { padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,var(--gold),#FF6B35); border:none; color:#000; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; }
+.bb-redeem-btn:active { transform:scale(.95); }
+
+/* Gift history */
+.bb-gift-history { width:100%; max-width:340px; margin-top:14px; }
+.bb-gift-history h3 { font-size:14px; color:var(--text); letter-spacing:1px; margin-bottom:6px; }
+.bb-gift-item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:rgba(255,255,255,.03); border-radius:8px; margin-bottom:4px; font-size:12px; color:var(--text); }
+.bb-gift-item .gift-date { color:var(--muted); font-size:10px; margin-left:auto; }
+
+/* ============================================================ Toast ============================================================ */
+.toast { position:fixed; top:calc(90px + var(--safe-top)); left:50%; transform:translateX(-50%) translateY(-20px); z-index:500; background:rgba(0,0,0,.92); border:1.5px solid var(--gold); border-radius:14px; padding:10px 22px; color:var(--gold); font-size:14px; font-weight:700; letter-spacing:1px; opacity:0; pointer-events:none; transition:all .4s; white-space:nowrap; backdrop-filter:blur(10px); }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============================================================ Onboarding ============================================================ */
+.onboarding { position:fixed; inset:0; z-index:600; background:rgba(0,0,0,.92); backdrop-filter:blur(15px); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s; padding:30px; }
+.onboarding.show { opacity:1; pointer-events:auto; }
+.onb-slide { text-align:center; display:none; }
+.onb-slide.active { display:block; animation: fadeSlideIn .4s ease; }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.onb-emoji { font-size:64px; margin-bottom:16px; }
+.onb-title { font-size:22px; font-weight:900; color:var(--text); letter-spacing:2px; margin-bottom:8px; }
+.onb-desc { font-size:14px; color:var(--muted); line-height:1.6; max-width:260px; }
+.onb-dots { display:flex; gap:8px; margin:24px 0; }
+.onb-dot { width:8px; height:8px; border-radius:50%; background:var(--surface-border); transition:all .3s; }
+.onb-dot.active { background:var(--accent); width:24px; border-radius:4px; }
+.onb-btn { padding:12px 40px; border-radius:50px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px; box-shadow:0 6px 20px rgba(255,107,53,.35); transition:all .2s; }
+.onb-btn:active { transform:scale(.95); }
+.onb-skip { margin-top:16px; color:var(--muted); font-size:12px; background:none; border:none; cursor:pointer; letter-spacing:1px; }
+
+/* ============================================================ Leaderboard (Mock) ============================================================ */
+.leaderboard { margin-top:16px; width:100%; max-width:350px; }
+.leaderboard h3 { font-size:15px; color:var(--text); letter-spacing:2px; margin-bottom:8px; text-align:center; }
+.lb-list { display:flex; flex-direction:column; gap:4px; }
+.lb-item { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface); border-radius:10px; font-size:12px; color:var(--text); }
+.lb-item.you { border:1.5px solid var(--accent); background:rgba(255,107,53,.08); }
+.lb-rank { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; background:rgba(255,255,255,.1); }
+.lb-rank.gold { background:var(--gold); color:#000; }
+.lb-rank.silver { background:#C0C0C0; color:#000; }
+.lb-rank.bronze { background:#CD7F32; color:#fff; }
+.lb-name { flex:1; font-weight:600; }
+.lb-score { color:var(--accent); font-weight:800; }
+
+/* ============================================================ Theme Picker in Settings ============================================================ */
+.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; width:100%; max-width:350px; }
+.theme-grid h3 { grid-column:1/-1; font-size:15px; color:var(--text); letter-spacing:2px; text-align:center; margin-bottom:4px; }
+.theme-opt { padding:12px 8px; border-radius:12px; background:var(--surface); border:1.5px solid var(--surface-border); cursor:pointer; text-align:center; font-size:12px; color:var(--text); font-weight:600; letter-spacing:1px; transition:all .2s; }
+.theme-opt.sel { border-color:var(--accent); background:rgba(255,107,53,.1); }
+.theme-opt .t-emoji { font-size:22px; display:block; margin-bottom:4px; }
+.theme-opt:active { transform:scale(.95); }
+
+/* ============================================================ Data Section ============================================================ */
+.data-section { margin-top:16px; width:100%; max-width:350px; }
+.data-section h3 { font-size:15px; color:var(--text); letter-spacing:2px; margin-bottom:8px; text-align:center; }
+.data-btns { display:flex; gap:8px; justify-content:center; }
+.data-btn { padding:8px 16px; border-radius:20px; background:var(--surface); border:1px solid var(--surface-border); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; letter-spacing:1px; transition:all .2s; }
+.data-btn:active { transform:scale(.95); }
+
+/* ============================================================ Settings Row ============================================================ */
+.settings-row { display:flex; align-items:center; justify-content:space-between; width:100%; max-width:350px; padding:10px 14px; background:var(--surface); border-radius:12px; margin-top:8px; }
+.settings-row .s-label { color:var(--text); font-size:13px; font-weight:600; letter-spacing:1px; }
+.toggle-sw { width:44px; height:24px; border-radius:12px; background:var(--surface-border); cursor:pointer; position:relative; transition:background .3s; border:none; }
+.toggle-sw.on { background:var(--accent); }
+.toggle-sw::after { content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .3s; }
+.toggle-sw.on::after { left:22px; }
+
+/* ============================================================ Floating Emoji & Burst ============================================================ */
+@keyframes floatUp { 0%{ transform:translateY(0) scale(.4) rotate(0deg); opacity:1; } 100%{ transform:translateY(-300px) scale(1.3) rotate(180deg); opacity:0; } }
+.floating-emoji { position:fixed; z-index:60; pointer-events:none; font-size:28px; animation:floatUp 2s ease-out forwards; }
+@keyframes burst { 0%{ transform:translate(0,0) scale(1); opacity:1; } 100%{ transform:translate(var(--bx),var(--by)) scale(0); opacity:0; } }
+.burst-particle { position:fixed; z-index:55; pointer-events:none; border-radius:50%; animation:burst .9s ease-out forwards; }
+
+/* ============================================================ Animation Keyframes ============================================================ */
+@keyframes quake { 0%,100%{ transform:translate(0,0) rotate(0) scale(1); } 10%{ transform:translate(-12px,8px) rotate(-3deg) scale(1.05); } 20%{ transform:translate(10px,-6px) rotate(2.5deg) scale(1.08); } 30%{ transform:translate(-8px,-10px) rotate(-4deg) scale(1.12); } 40%{ transform:translate(14px,5px) rotate(3.5deg) scale(1.06); } 50%{ transform:translate(-10px,12px) rotate(-2deg) scale(1.15); } 60%{ transform:translate(8px,-8px) rotate(4deg) scale(1.04); } 70%{ transform:translate(-14px,4px) rotate(-3.5deg) scale(1.1); } 80%{ transform:translate(6px,-4px) rotate(1.5deg) scale(1.02); } 90%{ transform:translate(-4px,2px) rotate(-1deg) scale(1.01); } }
+@keyframes boing { 0%{ transform:scale(0) translateY(200px); } 15%{ transform:scale(1.3) translateY(-60px); } 25%{ transform:scale(.9) translateY(20px); } 35%{ transform:scale(1.12) translateY(-25px); } 45%{ transform:scale(.95) translateY(8px); } 55%{ transform:scale(1.05) translateY(-10px); } 65%{ transform:scale(.98) translateY(3px); } 75%{ transform:scale(1.01) translateY(-2px); } 85%,100%{ transform:scale(1) translateY(0); } }
+@keyframes spinIn { 0%{ transform:rotate3d(0,1,0,180deg) scale(0) translateZ(-200px); opacity:0; } 15%{ opacity:1; } 40%{ transform:rotate3d(0,1,0,0deg) scale(1.4) translateZ(40px); } 60%{ transform:rotate3d(0,1,0,0deg) scale(.85) translateZ(-10px); } 80%{ transform:rotate3d(0,1,0,0deg) scale(1.05) translateZ(5px); } 100%{ transform:rotate3d(0,1,0,0deg) scale(1) translateZ(0); } }
+@keyframes bulletIn { 0%{ transform:translateX(-400px) scale(.3); opacity:0; filter:blur(20px); } 40%{ transform:translateX(15px) scale(1.12); opacity:1; filter:blur(0); } 60%{ transform:translateX(-6px) scale(.95); } 80%{ transform:translateX(3px) scale(1.02); } 100%{ transform:translateX(0) scale(1); } }
+@keyframes dropIn { 0%{ transform:translateY(-500px) scale(.1) rotate(45deg); opacity:0; } 50%{ transform:translateY(20px) scale(1.2) rotate(-5deg); opacity:1; } 70%{ transform:translateY(-20px) scale(.9) rotate(3deg); } 85%{ transform:translateY(5px) scale(1.03); } 100%{ transform:translateY(0) scale(1) rotate(0); } }
+@keyframes typeFlash { 0%{ clip-path:inset(0 100% 0 0); opacity:0; } 20%{ clip-path:inset(0 85% 0 0); opacity:1; } 40%{ clip-path:inset(0 65% 0 0); } 60%{ clip-path:inset(0 35% 0 0); } 75%{ clip-path:inset(0 0 0 0); } 80%{ transform:scale(1.25); color:var(--accent2); } 90%{ transform:scale(.9); color:var(--gold); } 100%{ transform:scale(1); color:var(--text); clip-path:inset(0 0 0 0); } }
+@keyframes jello { 0%{ transform:skewX(0) skewY(0); } 15%{ transform:skewX(-15deg) skewY(5deg); } 30%{ transform:skewX(12deg) skewY(-4deg); } 45%{ transform:skewX(-8deg) skewY(3deg); } 60%{ transform:skewX(5deg) skewY(-2deg); } 75%{ transform:skewX(-2deg) skewY(1deg); } 90%{ transform:skewX(0) skewY(0) scale(1.1); } 100%{ transform:skewX(0) skewY(0) scale(1); } }
+@keyframes neonPulse { 0%,100%{ text-shadow:0 0 30px rgba(255,107,53,.8),0 0 60px rgba(255,59,139,.6); } 25%{ text-shadow:0 0 50px rgba(0,255,255,.9),0 0 100px rgba(0,200,255,.7); } 50%{ text-shadow:0 0 50px rgba(255,0,255,.9),0 0 100px rgba(255,0,200,.7); } 75%{ text-shadow:0 0 50px rgba(255,255,0,.9),0 0 100px rgba(255,200,0,.7); } }
+@keyframes heartbeat { 0%{ transform:scale(1); } 15%{ transform:scale(1.4); } 25%{ transform:scale(1); } 35%{ transform:scale(1.35); } 45%{ transform:scale(1); } 60%{ transform:scale(1.25); } 100%{ transform:scale(1); } }
+@keyframes glitch { 0%,100%{ transform:translate(0); clip-path:inset(0 0 0 0); } 10%{ transform:translate(-6px,3px); clip-path:inset(20% 0 60% 0); } 20%{ transform:translate(6px,-2px); clip-path:inset(50% 0 10% 0); } 30%{ transform:translate(-3px,5px); clip-path:inset(10% 0 70% 0); } 40%{ transform:translate(5px,-4px); clip-path:inset(30% 0 30% 0); } 50%{ transform:translate(-2px,1px); clip-path:inset(0 0 0 0); } 55%{ transform:translate(4px,-3px); clip-path:inset(60% 0 5% 0); } 60%{ transform:translate(-5px,2px); clip-path:inset(0 0 0 0); } 70%{ transform:translate(3px,-5px); clip-path:inset(5% 0 80% 0); } 80%{ transform:translate(0); clip-path:inset(0 0 0 0); } }
+@keyframes ultimateIn { 0%{ transform:scale(0) rotate(720deg); opacity:0; filter:blur(30px) hue-rotate(0deg); } 30%{ transform:scale(1.5) rotate(-20deg); opacity:1; filter:blur(0) hue-rotate(180deg); } 50%{ transform:scale(.7) rotate(10deg); filter:hue-rotate(360deg); } 70%{ transform:scale(1.2) rotate(-5deg); } 85%{ transform:scale(.95) rotate(2deg); } 100%{ transform:scale(1) rotate(0); filter:hue-rotate(360deg); } }
+@keyframes screenShake { 0%,100%{ transform:translate(0,0); } 10%{ transform:translate(-8px,5px); } 20%{ transform:translate(7px,-4px); } 30%{ transform:translate(-5px,-6px); } 40%{ transform:translate(9px,3px); } 50%{ transform:translate(-6px,7px); } 60%{ transform:translate(5px,-5px); } 70%{ transform:translate(-9px,2px); } 80%{ transform:translate(4px,-3px); } 90%{ transform:translate(-3px,1px); } }
+
+@media (max-width:380px) { .main-text{ font-size:36px; } .stage{ width:280px; height:240px; } .pomo-time{ font-size:40px; } }
+@media (min-width:768px) { .main-text{ font-size:54px; } .stage{ width:440px; height:340px; } }
+</style>
+</head>
+<body data-theme="default">
+
+<!-- ========== Layers ========== -->
+<div class="bg-layer"></div>
+<canvas class="particles" id="particles"></canvas>
+<div class="fx-layer" id="fxLayer"></div>
+<div class="screen-flash" id="screenFlash"></div>
+
+<!-- ========== Top Bar ========== -->
+<div class="top-bar">
+  <div class="brand"><div class="brand-icon" id="brandIcon">😴</div><div class="brand-name">无聊了么</div></div>
+  <div class="top-actions">
+    <button class="icon-btn" id="btnDark" onclick="toggleDark()" title="深夜模式">🌙</button>
+    <button class="icon-btn" id="btnSound" onclick="toggleSound()" title="音效">🔊</button>
+    <button class="icon-btn" id="btnSpeed" onclick="toggleSpeed()" title="快节奏">🐢</button>
+    <button class="icon-btn has-badge" id="btnCollection" onclick="openCollection()" title="成就">🏆</button>
+  </div>
+</div>
+
+<!-- ========== Idle Timer ========== -->
+<div class="idle-timer" id="idleTimer">摸鱼时长 00:00</div>
+
+<!-- ========== Main Stage ========== -->
+<div class="app-container">
+  <div class="stage"><div class="main-text" id="mainText">该干正事啦！！！</div></div>
+  <div class="slogan-sub" id="sloganLine">— 模式：未知 —</div>
+</div>
+
+<!-- ========== Post Actions ========== -->
+<div class="post-actions" id="postActions">
+  <div class="duration-picker">
+    <button class="dur-opt" onclick="setPomoDur(15,this)">15分</button>
+    <button class="dur-opt sel" onclick="setPomoDur(25,this)">25分</button>
+    <button class="dur-opt" onclick="setPomoDur(45,this)">45分</button>
+    <button class="dur-opt" onclick="setPomoDur(60,this)">60分</button>
+  </div>
+  <button class="action-btn btn-pomodoro" onclick="startPomodoro()">🍅 开始番茄钟</button>
+  <button class="action-btn btn-share" onclick="openShare()">📤 生成分享卡片</button>
+  <button class="action-btn btn-skip" onclick="dismissPostActions()">不了，继续摸鱼</button>
+</div>
+
+<!-- ========== Bottom Bar ========== -->
+<div class="bottom-bar">
+  <button class="pill-btn" onclick="replay()">🔄 再来一次</button>
+  <button class="pill-btn primary" onclick="startPomodoro()">🍅 番茄钟</button>
+  <button class="pill-btn" style="background:linear-gradient(135deg,var(--gold),#FF6B35);border:none;color:#000;box-shadow:0 4px 16px rgba(255,215,0,.3)" onclick="openBlindBox()">🎁 盲盒</button>
+</div>
+
+<!-- ========== Blind Box Counter ========== -->
+<div class="bb-counter" id="bbCounter">🎁 0/20</div>
+
+<!-- ========== Blind Box Overlay ========== -->
+<div class="blind-box-overlay" id="bbOverlay">
+  <div class="bb-glow"></div>
+  <div class="bb-box-label">— 轻触开盒，收获爆笑 —</div>
+  <div class="bb-box-wrap" onclick="openBox()">
+    <div class="bb-box" id="bbBox">🎁</div>
+  </div>
+  <p style="color:var(--muted);font-size:12px;margin-top:12px;letter-spacing:1px">已收集 <span id="bbProgress">0</span>/20 + 自定义</p>
+  <div style="display:flex;gap:8px;margin-top:16px">
+    <button class="pill-btn" style="background:var(--surface);border:1.5px solid var(--surface-border);color:var(--text)" onclick="closeBlindBox()">返回</button>
+    <button class="pill-btn" style="background:linear-gradient(135deg,var(--green),#00cc88);border:none;color:#000;box-shadow:0 4px 16px rgba(0,255,136,.25)" onclick="openBBEditor()">✏️ 创建嘲讽</button>
+  </div>
+</div>
+
+<!-- ========== Roast Card ========== -->
+<div class="roast-card" id="roastCard">
+  <div class="roast-emoji-big" id="roastEmoji">🤡</div>
+  <div class="roast-title" id="roastTitle">嘲讽语标题</div>
+  <div class="roast-subtitle" id="roastSubtitle">副标题吐槽</div>
+  <div class="roast-tag" id="roastTag">#1</div>
+  <div class="roast-actions">
+    <button class="roast-act-btn roast-share-btn" onclick="shareRoast()">📤 分享</button>
+    <button class="roast-act-btn" style="background:linear-gradient(135deg,var(--gold),#FF6B35);color:#000" onclick="giftCurrentRoast()">🎁 送礼</button>
+    <button class="roast-act-btn roast-again-btn" onclick="againBox()">再来</button>
+    <button class="roast-act-btn roast-close-btn" onclick="closeRoast()">关闭</button>
+  </div>
+</div>
+
+<!-- ========== Custom Roast Editor ========== -->
+<div class="bb-editor-overlay" id="bbEditorOverlay">
+  <div class="bb-editor-title">✏️ 创建你的嘲讽语</div>
+  <div class="bb-form">
+    <div class="bb-form-group">
+      <label class="bb-form-label">Emoji 表情</label>
+      <div class="bb-emoji-picker" id="emojiPicker"></div>
+    </div>
+    <div class="bb-form-group">
+      <label class="bb-form-label">主标题（吐槽金句）</label>
+      <input class="bb-form-input" id="roastTitleInput" placeholder="如：你的努力就像WiFi信号" maxlength="20">
+    </div>
+    <div class="bb-form-group">
+      <label class="bb-form-label">副标题（补充吐槽）</label>
+      <textarea class="bb-form-input bb-form-textarea" id="roastSubInput" placeholder="如：时有时无，大多数时候为零" maxlength="40"></textarea>
+    </div>
+    <div class="bb-form-group">
+      <label class="bb-form-label">标签/签名</label>
+      <input class="bb-form-input" id="roastTagInput" placeholder="如：#职场幽灵" maxlength="10">
+    </div>
+    <div class="bb-form-group">
+      <label class="bb-form-label">背景色</label>
+      <div class="bb-color-picker" id="colorPicker"></div>
+    </div>
+    <div class="bb-form-group">
+      <label class="bb-form-label">开盒动画</label>
+      <div class="bb-anim-picker" id="animPicker"></div>
+    </div>
+    <div class="bb-form-actions">
+      <button class="bb-form-btn secondary" onclick="closeBBEditor()">取消</button>
+      <button class="bb-form-btn primary" id="roastSaveBtn" onclick="saveCustomRoast()">💾 保存</button>
+    </div>
+  </div>
+  <!-- Custom roast list -->
+  <div class="bb-custom-list">
+    <h3>我的嘲讽语 (<span id="customCount">0</span>/10)</h3>
+    <div id="customRoastList"></div>
+  </div>
+  <!-- Redeem code -->
+  <div class="bb-redeem">
+    <h3>📥 兑换好友礼物</h3>
+    <div class="bb-redeem-row">
+      <input class="bb-redeem-input" id="redeemInput" placeholder="输入礼物码…">
+      <button class="bb-redeem-btn" onclick="redeemGift()">兑换</button>
+    </div>
+  </div>
+  <!-- Gift history -->
+  <div class="bb-gift-history">
+    <h3>📜 礼物记录</h3>
+    <div id="giftHistoryList"></div>
+  </div>
+  <button class="pill-btn" style="margin-top:14px;background:var(--surface);border:1.5px solid var(--surface-border);color:var(--text)" onclick="closeBBEditor()">返回盲盒</button>
+</div>
+
+<!-- ========== Gift Overlay ========== -->
+<div class="bb-gift-overlay" id="bbGiftOverlay">
+  <div class="gift-card">
+    <div class="gift-card-emoji" id="giftEmoji">🎁</div>
+    <div class="gift-card-title" id="giftTitle">嘲讽标题</div>
+    <div class="gift-card-sub" id="giftSub">嘲讽副标题</div>
+    <div class="gift-card-from" id="giftFrom">— 来自你的好友 —</div>
+    <div class="gift-card-code" id="giftCode" onclick="copyGiftCode()">点击复制礼物码</div>
+    <div class="gift-card-hint">把礼物码发给好友，好友在盲盒中兑换即可收到</div>
+    <button class="bb-form-btn primary" onclick="shareGiftNative()" style="width:100%">📤 发送给好友</button>
+    <button class="bb-form-btn secondary" onclick="closeGiftOverlay()" style="width:100%;margin-top:6px">关闭</button>
+  </div>
+</div>
+
+<!-- ========== Pomodoro Overlay ========== -->
+<div class="pomodoro-overlay" id="pomoOverlay">
+  <div class="pomo-ring">
+    <svg width="180" height="180" viewBox="0 0 180 180">
+      <circle class="bg-circle" cx="90" cy="90" r="82"></circle>
+      <circle class="fg-circle" id="pomoCircle" cx="90" cy="90" r="82" stroke-dasharray="515.2" stroke-dashoffset="0"></circle>
+    </svg>
+    <div class="pomo-time" id="pomoTime">25:00</div>
+    <div class="pomo-label" id="pomoLabel">专注中</div>
+    <div class="pomo-break-tip" id="pomoBreakTip"></div>
+  </div>
+  <div class="pomo-controls">
+    <button class="pomo-ctrl" style="background:rgba(255,59,139,.2);border-color:rgba(255,59,139,.4)" onclick="cancelPomodoro()">✕</button>
+    <button class="pomo-ctrl" id="pomoPause" onclick="togglePomodoro()">⏸</button>
+  </div>
+  <div class="dur-picker-inline duration-picker" id="pomoDurInline">
+    <button class="dur-opt" onclick="setPomoDur(15,this)">15分</button>
+    <button class="dur-opt sel" onclick="setPomoDur(25,this)">25分</button>
+    <button class="dur-opt" onclick="setPomoDur(45,this)">45分</button>
+    <button class="dur-opt" onclick="setPomoDur(60,this)">60分</button>
+  </div>
+  <div class="pomo-sessions" id="pomoSessions">今日完成 0 个番茄</div>
+</div>
+
+<!-- ========== Share Modal ========== -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card-container"><canvas id="shareCanvas" width="375" height="600"></canvas></div>
+  <div class="share-actions">
+    <button class="share-act-btn share-save" id="shareSaveBtn" onclick="saveShareCard()">💾 保存图片</button>
+    <button class="share-act-btn share-native" id="shareNativeBtn" onclick="nativeShare()" style="display:none">📲 一键分享</button>
+    <button class="share-act-btn share-close" onclick="closeShare()">关闭</button>
+  </div>
+</div>
+
+<!-- ========== Onboarding ========== -->
+<div class="onboarding" id="onboarding">
+  <div class="onb-slide active" data-slide="0">
+    <div class="onb-emoji">😴</div>
+    <div class="onb-title">欢迎来到「无聊了么」</div>
+    <div class="onb-desc">摸鱼终结者，用爆笑动画和番茄钟<br>帮你找回专注力！</div>
+  </div>
+  <div class="onb-slide" data-slide="1">
+    <div class="onb-emoji">🎬</div>
+    <div class="onb-title">10+种爆笑鞭策动画</div>
+    <div class="onb-desc">地震、弹跳、旋转、弹幕冲击…<br>收集全部解锁隐藏「终极奥义」！</div>
+  </div>
+  <div class="onb-slide" data-slide="2">
+    <div class="onb-emoji">🍅</div>
+    <div class="onb-title">番茄钟 + 摇一摇</div>
+    <div class="onb-desc">25分钟专注 + 5分钟休息<br>摇一摇手机就能换动画！</div>
+  </div>
+  <div class="onb-dots">
+    <div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div>
+  </div>
+  <button class="onb-btn" onclick="nextOnbSlide()">下一步</button>
+  <button class="onb-skip" onclick="closeOnboarding()">跳过</button>
+</div>
+
+<!-- ========== Collection Page ========== -->
+<div class="collection-page" id="collectionPage">
+  <div class="collection-header"><h2>🏆 你的成就</h2><p id="collectionSub">收集所有动画，解锁隐藏模式！</p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="statLashings">0</div><div class="stat-lbl">累计鞭策</div></div>
+    <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-lbl">连续打卡</div></div>
+    <div class="stat-card"><div class="stat-val" id="statPomos">0</div><div class="stat-lbl">完成番茄</div></div>
+    <div class="stat-card"><div class="stat-val" id="statFocus">0min</div><div class="stat-lbl">累计专注</div></div>
+  </div>
+  <div class="badge-section"><h3>🎖️ 徽章</h3><div class="badges" id="badgesContainer"></div></div>
+
+  <!-- Leaderboard -->
+  <div class="leaderboard"><h3>🏅 摸鱼人排行榜</h3><div class="lb-list" id="lbList"></div></div>
+
+  <!-- Anim collection -->
+  <div class="anim-grid"><h3>🎬 动画收集</h3><div class="anim-list" id="animListContainer"></div></div>
+
+  <!-- Blind box roast collection -->
+  <div class="bb-collection"><h3>🎁 盲盒嘲讽收集</h3><div class="bb-roast-grid" id="bbRoastList"></div></div>
+
+  <!-- Theme picker -->
+  <div class="theme-grid">
+    <h3>🎨 主题皮肤</h3>
+    <button class="theme-opt sel" data-theme="default" onclick="switchTheme('default',this)"><span class="t-emoji">🌌</span>默认</button>
+    <button class="theme-opt" data-theme="cyberpunk" onclick="switchTheme('cyberpunk',this)"><span class="t-emoji">🤖</span>赛博朋克</button>
+    <button class="theme-opt" data-theme="retro" onclick="switchTheme('retro',this)"><span class="t-emoji">📺</span>复古像素</button>
+    <button class="theme-opt" data-theme="zen" onclick="switchTheme('zen',this)"><span class="t-emoji">🍃</span>极简禅意</button>
+    <button class="theme-opt" data-theme="candy" onclick="switchTheme('candy',this)"><span class="t-emoji">🍬</span>糖果</button>
+  </div>
+
+  <!-- Speed toggle -->
+  <div class="settings-row" style="margin-top:8px">
+    <span class="s-label">🐢 快节奏模式</span>
+    <button class="toggle-sw" id="speedToggle" onclick="toggleSpeed()"></button>
+  </div>
+
+  <!-- Data -->
+  <div class="data-section">
+    <h3>💾 数据管理</h3>
+    <div class="data-btns">
+      <button class="data-btn" onclick="exportData()">📥 导出备份</button>
+      <button class="data-btn" onclick="importData()">📤 导入备份</button>
+      <button class="data-btn" onclick="genWeeklyReport()">📊 周报</button>
+    </div>
+  </div>
+
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+  <button class="close-collection" onclick="closeCollection()">返回</button>
+</div>
+
+<!-- ========== Toast ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+'use strict';
+
+// ==================== DATA STORE ====================
+const STORE = {
+  get(k, d) { try { const v = localStorage.getItem('bored_'+k); return v !== null ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { localStorage.setItem('bored_'+k, JSON.stringify(v)); },
+  get counter() { return this.get('counter', 0); },
+  set counter(v) { this.set('counter', v); },
+  get seen() { return this.get('seen_anims', []); },
+  set seen(v) { this.set('seen_anims', v); },
+  get lastDate() { return this.get('last_date', ''); },
+  set lastDate(v) { this.set('last_date', v); },
+  get streak() { return this.get('streak', 0); },
+  set streak(v) { this.set('streak', v); },
+  get pomos() { return this.get('pomos_today', 0); },
+  set pomos(v) { this.set('pomos_today', v); },
+  get totalFocus() { return this.get('total_focus', 0); },
+  set totalFocus(v) { this.set('total_focus', v); },
+  get todayPomoDate() { return this.get('pomo_date', ''); },
+  set todayPomoDate(v) { this.set('pomo_date', v); },
+  get darkMode() { return this.get('dark_mode', null); },
+  set darkMode(v) { this.set('dark_mode', v); },
+  get soundOn() { return this.get('sound_on', true); },
+  set soundOn(v) { this.set('sound_on', v); },
+  get speedMode() { return this.get('speed_mode', false); },
+  set speedMode(v) { this.set('speed_mode', v); },
+  get pomoDuration() { return this.get('pomo_dur', 25); },
+  set pomoDuration(v) { this.set('pomo_dur', v); },
+  get theme() { return this.get('theme', 'default'); },
+  set theme(v) { this.set('theme', v); },
+  get onboardingDone() { return this.get('onb_done', false); },
+  set onboardingDone(v) { this.set('onb_done', v); },
+  get leaderboard() { return this.get('leaderboard', []); },
+  set leaderboard(v) { this.set('leaderboard', v); },
+  get notificationGranted() { return this.get('notif_ok', false); },
+  set notificationGranted(v) { this.set('notif_ok', v); },
+  get bbCollected() { return this.get('bb_collected', []); },
+  set bbCollected(v) { this.set('bb_collected', v); },
+  get customRoasts() { return this.get('custom_roasts', []); },
+  set customRoasts(v) { this.set('custom_roasts', v); },
+  get giftHistory() { return this.get('gift_history', []); },
+  set giftHistory(v) { this.set('gift_history', v); },
+  get receivedGifts() { return this.get('received_gifts', []); },
+  set receivedGifts(v) { this.set('received_gifts', v); },
+};
+
+// ==================== ANIMATION DEFINITIONS ====================
+const ANIMATIONS = [
+  { name:'🌋 地震模式', tag:'震到你清醒！', cls:'quake', dur:1200, emojis:['😱','💥','🌋','🔥','⚡'], bg:'#ff3300' },
+  { name:'🦘 弹跳模式', tag:'蹦到你干正事！', cls:'boing', dur:1400, emojis:['🦘','🐰','🏀','🎾','💪'], bg:'#ff6600' },
+  { name:'🌀 旋转模式', tag:'转晕了就该干活了！', cls:'spin', dur:1300, emojis:['🌀','🎯','💫','🌪️','😵'], bg:'#9900ff' },
+  { name:'💨 弹幕模式', tag:'一箭穿心正中眉心！', cls:'bullet', dur:1100, emojis:['💨','🏹','🎯','💘','⚡'], bg:'#00ccff' },
+  { name:'☄️ 天降模式', tag:'天上掉的不是馅饼是正事！', cls:'drop', dur:1400, emojis:['☄️','🌟','💫','⭐','🚀'], bg:'#ffcc00' },
+  { name:'⌨️ 打字机模式', tag:'逐字暴击！', cls:'type', dur:1600, emojis:['⌨️','💻','📝','✍️','⚡'], bg:'#00ff88' },
+  { name:'🍮 果冻模式', tag:'Q弹到你怀疑人生！', cls:'jello', dur:1300, emojis:['🍮','🍬','🧊','✨','💎'], bg:'#ff69b4' },
+  { name:'💡 霓虹模式', tag:'闪瞎也要提醒你！', cls:'neon', dur:2000, emojis:['💡','🌈','✨','🎆','🔮'], bg:'#ff00ff' },
+  { name:'💓 心跳模式', tag:'你的心在为你着急！', cls:'heart', dur:1600, emojis:['💓','❤️','💗','💖','🫀'], bg:'#ff0044' },
+  { name:'📺 故障模式', tag:'系统检测到懒癌病毒！', cls:'glitch', dur:1500, emojis:['📺','💾','⚠️','🚨','🤖'], bg:'#00ff41' },
+];
+const ULTIMATE = { name:'🌟 终极奥义', tag:'你终于全收集了！！！', cls:'ultimate', dur:2000, emojis:['🌟','👑','🎉','🏆','💎','🔥','✨'], bg:'#ffd700' };
+
+// ==================== BLIND BOX ROASTS ====================
+const ROASTS = [
+  // ===== 职场鞭策 (1-15) =====
+  { id:1,  emoji:'🤡',  title:'你的努力就像WiFi信号', subtitle:'时有时无，大多数时候为零', tag:'#职场幽灵', anim:'roastSlam',     bg:'#ff3300' },
+  { id:2,  emoji:'🦥',  title:'树懒看了都摇头', subtitle:'你干活的速度…让我怀疑你在倒退', tag:'#效率黑洞', anim:'roastBounce',    bg:'#ff6600' },
+  { id:3,  emoji:'💀',  title:'你的KPI已经凉透了', subtitle:'比我家冰箱还冷', tag:'#KPI杀手', anim:'roastSpin',      bg:'#9900ff' },
+  { id:4,  emoji:'🤖',  title:'AI都要替你干活了', subtitle:'再不努力，你的岗位就成它的了', tag:'#被替代预警', anim:'roastGlitch',    bg:'#00ff41' },
+  { id:5,  emoji:'🫠',  title:'你在摸鱼还是在被鱼摸？', subtitle:'分不清了，你已经融化了', tag:'#熔化选手', anim:'roastDrop',      bg:'#00ccff' },
+  { id:6,  emoji:'🐸',  title:'你的膀胱在倒计时', subtitle:'坐了多久了？起来走走吧…水都喝三杯了', tag:'#久坐冠军', anim:'roastJello',     bg:'#ff69b4' },
+  { id:7,  emoji:'🧟',  title:'你的状态：丧尸模式', subtitle:'有目标但不知道怎么走的那种', tag:'#丧尸打工人', anim:'roastShake',    bg:'#666666' },
+  { id:8,  emoji:'🐢',  title:'你的DDL在前面跑步', subtitle:'你在后面散步…差距越拉越大', tag:'#龟速达人', anim:'roastFloat',     bg:'#00aa88' },
+  { id:9,  emoji:'🎭',  title:'你的演技可以拿奥斯卡', subtitle:'"我在看资料" — 你打开的是淘宝', tag:'#奥斯卡得主', anim:'roastReveal',    bg:'#FFD700' },
+  { id:10, emoji:'🔥',  title:'别人的进度条：99%', subtitle:'你的进度条：加载中…转圈圈…', tag:'#永动转圈', anim:'roastTwist',     bg:'#ff4500' },
+  { id:11, emoji:'🎃',  title:'万圣节都不用化妆', subtitle:'你现在这个黑眼圈就是最恐怖的妆容', tag:'#天然万圣节', anim:'roastSlam',     bg:'#FF8C00' },
+  { id:12, emoji:'🎪',  title:'你的借口比杂技还花哨', subtitle:'"再刷5分钟"你已经说了20遍了', tag:'#借口艺术家', anim:'roastBounce',    bg:'#e91e63' },
+  { id:13, emoji:'💼',  title:'你的工位长蘑菇了', subtitle:'不动弹就会腐殖质化', tag:'#工位蘑菇', anim:'roastExplode',   bg:'#8B4513' },
+  { id:14, emoji:'⏰',  title:'时钟看了你都说：求你别看了', subtitle:'你盯着我有什么用，又不能倒转', tag:'#时间刺客', anim:'roastRocket',    bg:'#ff1744' },
+  { id:15, emoji:'🎯',  title:'你的OKR需要GPS导航', subtitle:'季度过了一半，方向还偏着呢', tag:'#OKR迷路', anim:'roastLightning', bg:'#ff9100' },
+
+  // ===== 动物嘲讽 (16-30) =====
+  { id:16, emoji:'🦦',  title:'水獭干活比你认真', subtitle:'人家还在用石头砸贝壳呢，你连屏幕都不看', tag:'#不如水獭', anim:'roastFlip',     bg:'#ffcc00' },
+  { id:17, emoji:'🐧',  title:'企鹅看了都替你着急', subtitle:'你走路的速度都比你干活的快', tag:'#企鹅加油', anim:'roastPunch',     bg:'#0000aa' },
+  { id:18, emoji:'🦉',  title:'猫头鹰看了你都说：兄弟太晚了', subtitle:'这个点还不睡，是要进化成猫头鹰吗', tag:'#夜猫选手', anim:'roastZoom',      bg:'#1a1a5e' },
+  { id:19, emoji:'🦥',  title:'蜗牛寄了快递催你加油', subtitle:'连蜗牛都觉得你太慢了', tag:'#蜗牛认证', anim:'roastElastic',   bg:'#8B4513' },
+  { id:20, emoji:'🪩',  title:'摸鱼摸到碟片都转不动了', subtitle:'你这个转速…已经严重磨损了', tag:'#碟片磨损', anim:'roastSwing',     bg:'#ff00ff' },
+  { id:21, emoji:'🐝',  title:'蜜蜂一天采1000朵花', subtitle:'你一天划1000条朋友圈', tag:'#蜜蜂同行', anim:'roastDrill',     bg:'#FFC107' },
+  { id:22, emoji:'🐘',  title:'大象从来不忘记DDL', subtitle:'你的DDL呢？忘到上个月了', tag:'#大象记忆', anim:'roastMagnet',    bg:'#9E9E9E' },
+  { id:23, emoji:'🦜',  title:'鹦鹉都学会了你的口头禅', subtitle:'"我马上就做"说了一万遍了', tag:'#鹦鹉复读', anim:'roastNinja',     bg:'#00C853' },
+  { id:24, emoji:'🐕',  title:'导盲犬都替你着急', subtitle:'你在摸鱼的路上已经迷路了', tag:'#盲人摸鱼', anim:'roastWave',      bg:'#FF6D00' },
+  { id:25, emoji:'🐜',  title:'蚂蚁扛的东西比你干的活还多', subtitle:'你认真的吗？你被蚂蚁超越了', tag:'#蚁不如', anim:'roastPortal',    bg:'#33691E' },
+  { id:26, emoji:'🐬',  title:'海豚智商比你高', subtitle:'海豚还会合作，你就知道划水', tag:'#海豚暴击', anim:'roastSpiral',    bg:'#0091EA' },
+  { id:27, emoji:'🦊',  title:'狐狸看了你的套路都笑了', subtitle:'你偷懒的手段太低级了', tag:'#狐狸视角', anim:'roastBean',      bg:'#E65100' },
+  { id:28, emoji:'🐿️', title:'松鼠在存坚果，你在存表情包', subtitle:'冬天来了你靠表情包过冬吗', tag:'#表情包仓鼠', anim:'roastSpring',    bg:'#795548' },
+  { id:29, emoji:'🦈',  title:'鲨鱼不前进就会死', subtitle:'你不前进就等着被淘汰吧', tag:'#鲨鱼法则', anim:'roastWhip',      bg:'#1565C0' },
+  { id:30, emoji:'🦒',  title:'长颈鹿站着睡觉都能保持清醒', subtitle:'你坐着都睡着了', tag:'#长颈鹿精神', anim:'roastMorph',    bg:'#4E342E' },
+
+  // ===== 社交暴击 (31-45) =====
+  { id:31, emoji:'📱',  title:'朋友圈99+你没看', subtitle:'但你把同一页刷了99遍', tag:'#无效刷屏', anim:'roastSlam',     bg:'#E91E63' },
+  { id:32, emoji:'💬',  title:'群消息已读不回王', subtitle:'你大概是已读不回领域的世界冠军', tag:'#已读不回', anim:'roastPunch',     bg:'#7B1FA2' },
+  { id:33, emoji:'🎭',  title:'社交状态：薛定谔的忙', subtitle:'别人问你在干嘛，你自己也不知道', tag:'#量子忙碌', anim:'roastGlitch',    bg:'#00BCD4' },
+  { id:34, emoji:'🎟️',  title:'社交恐惧症但只在线上', subtitle:'见面不敢说话，键盘上你是辩论冠军', tag:'#键盘侠', anim:'roastBounce',    bg:'#FF5722' },
+  { id:35, emoji:'🙋',  title:'你的头像闪了一天没人找你', subtitle:'尴尬到抠出一座迪士尼乐园', tag:'#没人找我', anim:'roastFloat',     bg:'#607D8B' },
+  { id:36, emoji:'📧',  title:'群聊你的存在感', subtitle:'约等于那个没人用的表情包', tag:'#透明人', anim:'roastZoom',      bg:'#9E9E9E' },
+  { id:37, emoji:'🤳',  title:'自拍100张选了99张删了', subtitle:'还有1张加了10层滤镜', tag:'#滤镜大师', anim:'roastFlip',      bg:'#F48FB1' },
+  { id:38, emoji:'🔴',  title:'你直播了，观众：0', subtitle:'但你对着空气说了2小时', tag:'#单人直播', anim:'roastShake',     bg:'#F44336' },
+  { id:39, emoji:'🔔',  title:'手机响了是你设的闹钟', subtitle:'提醒你该从被窝里爬出来了', tag:'#闹钟暴击', anim:'roastElastic',   bg:'#FF9800' },
+  { id:40, emoji:'📝',  title:'你答应别人的事', subtitle:'和你的收藏夹一样多——但一个都没做', tag:'#收藏夹博物馆', anim:'roastReveal',    bg:'#8BC34A' },
+  { id:41, emoji:'🧩',  title:'朋友圈三天可见', subtitle:'但你的"三天"已经持续了三年', tag:'#薛定谔的朋友圈', anim:'roastPortal',    bg:'#3F51B5' },
+  { id:42, emoji:'🎁',  title:'别人发的红包你秒抢', subtitle:'回消息的速度和蜗牛赛跑', tag:'#红包侠', anim:'roastRocket',    bg:'#D32F2F' },
+  { id:43, emoji:'🫣',  title:'群聊里你永远是潜水员', subtitle:'偶尔冒泡说个"收到"然后继续潜水', tag:'#群聊潜水员', anim:'roastDrill',     bg:'#0288D1' },
+  { id:44, emoji:'🤫',  title:'你设了免打扰后', subtitle:'世界终于安静了，你也终于安静了', tag:'#免打扰人生', anim:'roastNinja',     bg:'#37474F' },
+  { id:45, emoji:'📸',  title:'拍了美食先修图半小时', subtitle:'菜都凉了，你也凉了', tag:'#先修图后吃饭', anim:'roastSpiral',    bg:'#FF7043' },
+
+  // ===== 健康/生活鞭策 (46-60) =====
+  { id:46, emoji:'💤',  title:'你的工位在发光…不对是睡觉', subtitle:'口水都流到键盘上了', tag:'#睡神附体', anim:'roastUnfold',    bg:'#4a0080' },
+  { id:47, emoji:'🧲',  title:'你和床的吸引力', subtitle:'比万有引力还强，牛顿来了都算不明白', tag:'#引力之王', anim:'roastRise',      bg:'#2196F3' },
+  { id:48, emoji:'🍔',  title:'你的外卖小哥认识你', subtitle:'比你同事还熟，毕竟他天天来', tag:'#外卖VIP', anim:'roastDrop',      bg:'#FF8F00' },
+  { id:49, emoji:'☕',  title:'喝咖啡已经不能续命了', subtitle:'建议直接注射咖啡因', tag:'#咖啡免疫', anim:'roastSlam',      bg:'#795548' },
+  { id:50, emoji:'🛏️',  title:'你跟床的关系比你跟人的还亲密', subtitle:'每天黏在一起8小时以上', tag:'#床仙', anim:'roastMorph',      bg:'#5C6BC0' },
+  { id:51, emoji:'🏋️', title:'你的运动步数', subtitle:'靠手机放在洗衣机里甩出来的', tag:'#洗衣机步数', anim:'roastExplode',   bg:'#EF5350' },
+  { id:52, emoji:'🥤',  title:'奶茶店会员卡等级比你的KPI还高', subtitle:'你的人生高光时刻是喝到新品', tag:'#奶茶达人', anim:'roastBounce',    bg:'#E91E63' },
+  { id:53, emoji:'👀',  title:'你的眼睛在发红光', subtitle:'不是赛博朋克，是熬夜熬的', tag:'#赛博熬夜', anim:'roastLightning', bg:'#D500F9' },
+  { id:54, emoji:'🧘',  title:'你做过的最剧烈运动', subtitle:'是把手机翻了个面继续刷', tag:'#翻面运动', anim:'roastJello',     bg:'#26A69A' },
+  { id:55, emoji:'🩺',  title:'颈椎病已经找上门了', subtitle:'你的脖子已经获得了30年磨砺', tag:'#颈椎精英', anim:'roastShake',     bg:'#455A64' },
+  { id:56, emoji:'🥗',  title:'你的晚餐是外卖+外卖+外卖', subtitle:'偶尔来一顿泡面改善伙食', tag:'#泡面改善伙食', anim:'roastWhip',      bg:'#FF6F00' },
+  { id:57, emoji:'🧴',  title:'你唯一坚持的护肤习惯', subtitle:'就是把脸埋进枕头里', tag:'#枕头护肤', anim:'roastBean',      bg:'#FFAB91' },
+  { id:58, emoji:'🌡️',  title:'你的体温计不用了', subtitle:'因为你的热情早就降为零了', tag:'#零热情', anim:'roastFloat',     bg:'#42A5F5' },
+  { id:59, emoji:'💊',  title:'维生素你靠彩虹糖补充', subtitle:'你的健康理念很独特', tag:'#彩虹糖养生', anim:'roastSpring',    bg:'#AB47BC' },
+  { id:60, emoji:'🛁',  title:'洗澡的频率和写报告一样', subtitle:'能拖就拖，直到最后一刻', tag:'#洗澡困难户', anim:'roastWave',      bg:'#29B6F6' },
+
+  // ===== 技术/学习暴击 (61-75) =====
+  { id:61, emoji:'🤯',  title:'你的大脑已经蓝屏了', subtitle:'建议重启一下：放下手机，闭眼30秒', tag:'#需要重启', anim:'roastMorph',      bg:'#ff0044' },
+  { id:62, emoji:'💻',  title:'你的代码注释比代码还长', subtitle:'但代码还是跑不通', tag:'#注释大师', anim:'roastGlitch',    bg:'#00E676' },
+  { id:63, emoji:'📚',  title:'买书如山倒，读书如抽丝', subtitle:'你的书架是新书的展览馆', tag:'#书架博物馆', anim:'roastSpin',      bg:'#FF6F00' },
+  { id:64, emoji:'🔍',  title:'百度知道你的问题但你不问', subtitle:'你选择继续困惑', tag:'#搜索引擎恐惧', anim:'roastPortal',    bg:'#4FC3F7' },
+  { id:65, emoji:'🧠',  title:'你的知识储备', subtitle:'和缓存一样，关机就没了', tag:'#人肉缓存', anim:'roastExplode',   bg:'#FF7043' },
+  { id:66, emoji:'🎮',  title:'游戏段位比你的工资还高', subtitle:'至少游戏里你是王者', tag:'#游戏王者', anim:'roastRocket',    bg:'#E040FB' },
+  { id:67, emoji:'🔄',  title:'你的学习计划', subtitle:'每年1月1日准时启动，1月2日准时挂掉', tag:'#新年计划', anim:'roastNinja',     bg:'#C62828' },
+  { id:68, emoji:'🪫',  title:'你的专注力只剩1%了', subtitle:'和你的手机电量一样岌岌可危', tag:'#低电量模式', anim:'roastLightning', bg:'#FFD600' },
+  { id:69, emoji:'🧪',  title:'你的人生就像在debug', subtitle:'改了一个bug又来了三个', tag:'#人生debug', anim:'roastDrill',     bg:'#00BFA5' },
+  { id:70, emoji:'📡',  title:'ChatGPT回你消息都比你有诚意', subtitle:'至少它秒回不敷衍', tag:'#AI比你有诚意', anim:'roastSpiral',    bg:'#304FFE' },
+  { id:71, emoji:'💡',  title:'你的灵感就像WiFi广告', subtitle:'弹窗频率很高，但一个都没点开', tag:'#灵感弹窗', anim:'roastMagnet',    bg:'#FFC400' },
+  { id:72, emoji:'🔑',  title:'收藏夹 = 电子坟墓', subtitle:'收藏即学会，存下即拥有', tag:'#收藏即学会', anim:'roastReveal',    bg:'#6D4C41' },
+  { id:73, emoji:'🧩',  title:'你的简历写的技能', subtitle:'和你的实际水平之间隔着一个太平洋', tag:'#简历太平洋', anim:'roastBean',      bg:'#1565C0' },
+  { id:74, emoji:'🐛',  title:'你写的bug数量', subtitle:'可以养活整个印度IT产业', tag:'#bug生态', anim:'roastWhip',      bg:'#558B2F' },
+  { id:75, emoji:'🧪',  title:'实验数据跑了一天', subtitle:'结果发现忘了按保存', tag:'#忘保存冠军', anim:'roastPunch',     bg:'#00897B' },
+
+  // ===== 情感/关系暴击 (76-85) =====
+  { id:76, emoji:'💔',  title:'你的前任看了都心疼你', subtitle:'不是还爱你，是觉得你太惨了', tag:'#前任视角', anim:'roastSlam',      bg:'#C62828' },
+  { id:77, emoji:'🌹',  title:'你养的植物都比你自律', subtitle:'它每天都按时晒太阳，你呢？', tag:'#植物自律', anim:'roastFloat',     bg:'#2E7D32' },
+  { id:78, emoji:'🐱',  title:'你家猫的收入可能比你高', subtitle:'毕竟它能直播睡觉挣打赏', tag:'#猫比你强', anim:'roastBounce',    bg:'#FF8A65' },
+  { id:79, emoji:'💝',  title:'你的情人节计划', subtitle:'和往常一样：躺在床上刷手机', tag:'#情人节躺平', anim:'roastZoom',      bg:'#F06292' },
+  { id:80, emoji:'🤝',  title:'你答应别人的承诺', subtitle:'保质期比泡面还短', tag:'#泡面承诺', anim:'roastFlip',      bg:'#78909C' },
+  { id:81, emoji:'🪞',  title:'镜子里的你', subtitle:'眼袋比钱包还鼓', tag:'#眼袋富人', anim:'roastJello',     bg:'#4527A0' },
+  { id:82, emoji:'💌',  title:'你上次认真回消息', subtitle:'还是上辈子的事了', tag:'#上辈子回复', anim:'roastWave',      bg:'#EC407A' },
+  { id:83, emoji:'🎵',  title:'你的歌单全是伤感情歌', subtitle:'但不是失恋，是被DDL伤了', tag:'#DDL情歌', anim:'roastSpiral',    bg:'#283593' },
+  { id:84, emoji:'💰',  title:'你的存款和你的人缘一样', subtitle:'都是个位数', tag:'#双重个位数', anim:'roastWhip',      bg:'#F9A825' },
+  { id:85, emoji:'🏠',  title:'你妈发来的消息已读30条了', subtitle:'但你的回复还是"嗯""好""知道了"', tag:'#三字回复王', anim:'roastSpring',    bg:'#E57373' },
+
+  // ===== 终极鞭策/自我提升 (86-100) =====
+  { id:86, emoji:'⭐',  title:'今天的你比昨天更…', subtitle:'更会找借口了', tag:'#借口进化论', anim:'roastTwist',     bg:'#FFD600' },
+  { id:87, emoji:'🚀',  title:'别人的火箭已经发射了', subtitle:'你还在研究怎么加油', tag:'#发射台选手', anim:'roastRocket',    bg:'#FF6D00' },
+  { id:88, emoji:'🏆',  title:'你的自律水平', subtitle:'适合参加"躺平世锦赛"', tag:'#躺平冠军', anim:'roastElastic',   bg:'#FFB300' },
+  { id:89, emoji:'🧗',  title:'你离目标最近的时刻', subtitle:'是设定目标的那一刻', tag:'#目标设定者', anim:'roastRise',      bg:'#0097A7' },
+  { id:90, emoji:'⚡',  title:'你有100种偷懒的方法', subtitle:'但认真学习的方法一种都没有', tag:'#偷懒百科', anim:'roastLightning', bg:'#FFD740' },
+  { id:91, emoji:'🎬',  title:'你的人生像一部烂片', subtitle:'开头就剧透了结局——啥也没干成', tag:'#烂片导演', anim:'roastPortal',    bg:'#AD1457' },
+  { id:92, emoji:'🔔',  title:'你设了50个闹钟', subtitle:'然后按掉了49个，第50个的时候已经迟到了', tag:'#闹钟惨案', anim:'roastExplode',   bg:'#D84315' },
+  { id:93, emoji:'🎪',  title:'你的人生杂技表演', subtitle:'同时拖延10件事，全部接近DDL', tag:'#十线拖延', anim:'roastDrill',     bg:'#6A1B9A' },
+  { id:94, emoji:'💎',  title:'你的潜力是钻石级别', subtitle:'但被惰性裹了100层包浆', tag:'#包浆钻石', anim:'roastMorph',    bg:'#00838F' },
+  { id:95, emoji:'🧗',  title:'舒适区里你住了30年', subtitle:'该搬出来了吧？房租都欠了', tag:'#舒适区老住户', anim:'roastBean',     bg:'#33691E' },
+  { id:96, emoji:'🔥',  title:'你的热情燃烧了0.3秒', subtitle:'然后被一条短视频浇灭了', tag:'#短视频灭火', anim:'roastNinja',     bg:'#BF360C' },
+  { id:97, emoji:'🎯',  title:'你打靶的水平', subtitle:'子弹全飞到了别人的靶心上', tag:'#反向射击', anim:'roastPunch',     bg:'#0D47A1' },
+  { id:98, emoji:'🧭',  title:'你的方向感', subtitle:'GPS导航了5次你还是走错了', tag:'#人生迷路', anim:'roastMagnet',    bg:'#004D40' },
+  { id:99, emoji:'🌟',  title:'你就是自己的绊脚石', subtitle:'别人绊倒一次就爬起来了，你直接躺下了', tag:'#石佛躺平', anim:'roastWhip',      bg:'#FF6F00' },
+  { id:100,emoji:'👑',  title:'恭喜获得终极嘲讽', subtitle:'看完这条你还不起来干活的话…你已经没救了', tag:'#终极审判', anim:'roastUltimate',  bg:'#FFD700' },
+];
+
+const ROAST_ANIM_MAP = {
+  roastSlam:'roastSlam', roastBounce:'roastBounce', roastDrop:'roastDrop',
+  roastSpin:'roastSpin', roastGlitch:'roastGlitch', roastJello:'roastJello',
+  roastFlip:'roastFlip', roastShake:'roastShake', roastZoom:'roastZoom',
+  roastFloat:'roastFloat', roastMorph:'roastMorph', roastSwing:'roastSwing',
+  roastElastic:'roastElastic', roastReveal:'roastReveal', roastPunch:'roastPunch',
+  roastUnfold:'roastUnfold', roastTwist:'roastTwist', roastRise:'roastRise',
+  roastExplode:'roastExplode', roastRocket:'roastRocket', roastDrill:'roastDrill',
+  roastLightning:'roastLightning', roastSpiral:'roastSpiral', roastMeteor:'roastMeteor',
+  roastMagnet:'roastMagnet', roastNinja:'roastNinja', roastWave:'roastWave',
+  roastPortal:'roastPortal', roastBean:'roastBean', roastSpring:'roastSpring',
+  roastWhip:'roastWhip', roastUltimate:'roastUltimate',
+};
+
+const SLOGANS = [
+  '该干正事啦！！！', '别刷了！！！', '你的DDL在哭泣…',
+  '摸鱼一时爽，加班火葬场！', '老板来了！！！',
+  '动起来！！别躺了！！', '今天的砖搬完了吗？',
+  '再不动就要被优化了！', '刷手机的功夫活都干完了！',
+  '别看了，说的就是你！', 'Deadline不等人啊朋友！',
+  '卷王已经完成3个番茄钟了！',
+];
+
+// AI-style smart prompts by time of day
+const SMART_PROMPTS = {
+  morning: ['☀️ 新的一天开始了，冲！', '早起的鸟儿有虫吃，你起得也不算晚…', '开工大吉！今天一定不摸鱼！'],
+  noon: ['🍱 吃饱了没？该消化正事了！', '午休结束！下午继续战斗！', '别午睡太久，卷王已经看了3篇论文了…'],
+  afternoon: ['☕ 下午三点，咖啡续命中…该干正事了！', '午后犯困？来鞭策你清醒一下！', '还有2小时下班，还能抢救一下！'],
+  evening: ['🌙 最后冲刺！今天的事别拖到明天！', '加班不是你想要的吧？赶紧干完走人！', '晚上效率最高，别浪费在刷手机上！'],
+  weekend: ['📅 周末还在学习/工作？你是卷王本王！', '周末不卷，下周徒伤悲！', '别人在浪，你在卷，差距就是这么来的！'],
+  night: ['🌙 深夜了…再不睡明天就废了！', '23点了！！你在干什么！！', '熬夜一时爽，明天火葬场…'],
+};
+function getSmartSlogan() {
+  const h = new Date().getHours(), d = new Date().getDay();
+  let pool;
+  if (d === 0 || d === 6) pool = SMART_PROMPTS.weekend;
+  else if (h >= 22 || h < 6) pool = SMART_PROMPTS.night;
+  else if (h < 10) pool = SMART_PROMPTS.morning;
+  else if (h < 13) pool = SMART_PROMPTS.noon;
+  else if (h < 19) pool = SMART_PROMPTS.afternoon;
+  else pool = SMART_PROMPTS.evening;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// Break tips
+const BREAK_TIPS = [
+  '🫠 伸个懒腰，转动脖子', '💧 喝口水，补水很重要',
+  '👀 看远处20秒，保护眼睛', '🚶 起来走两步',
+  '🧘 深呼吸3次', '🤸 做个简单的拉伸',
+  '📵 别看手机了这也叫休息？', '🪟 看看窗外',
+  '☕ 续杯咖啡，继续战斗', '🦵 抖抖腿，活动活动',
+  '🧠 闭眼冥想30秒', '👋 揉揉手腕',
+];
+
+// Mock leaderboard names
+const MOCK_NAMES = ['卷王之王', '摸鱼大师', 'DDL战士', '咖啡续命', '带薪摸鱼', '躺平选手', '间歇性努力', '永远赶due'];
+
+// ==================== STATE ====================
+let currentMode = -1, isAnimating = false;
+let idleSeconds = 0, idleInterval = null;
+let pomodoroInterval = null, pomodoroSeconds = 0, pomodoroTotal = 0;
+let pomodoroRunning = false, pomodoroPaused = false, pomodoroDuration = 25;
+let darkMode = false, speedMode = false, breakTipTimer = null;
+let particlesRunning = true, onbSlide = 0;
+let notificationPermission = 'default';
+
+// ==================== DOM ====================
+const $ = id => document.getElementById(id);
+const mainText = $('mainText'), sloganLine = $('sloganLine');
+const screenFlash = $('screenFlash'), fxLayer = $('fxLayer');
+const postActions = $('postActions'), idleTimer = $('idleTimer');
+const brandIcon = $('brandIcon'), pomoOverlay = $('pomoOverlay');
+const pomoTime = $('pomoTime'), pomoCircle = $('pomoCircle');
+const pomoLabel = $('pomoLabel'), pomoBreakTip = $('pomoBreakTip');
+const pomoPause = $('pomoPause'), pomoSessions = $('pomoSessions');
+const shareModal = $('shareModal'), shareCanvas = $('shareCanvas');
+const collectionPage = $('collectionPage'), toast = $('toast');
+const btnDark = $('btnDark'), btnSound = $('btnSound');
+const btnCollection = $('btnCollection'), btnSpeed = $('btnSpeed');
+const particlesCanvas = $('particles');
+const speedToggle = $('speedToggle');
+
+// ==================== INIT ====================
+function init() {
+  // Theme
+  switchTheme(STORE.theme, document.querySelector(`.theme-opt[data-theme="${STORE.theme}"]`));
+  // Dark
+  const savedDark = STORE.darkMode;
+  darkMode = savedDark !== null ? savedDark : (new Date().getHours() >= 22 || new Date().getHours() < 7);
+  applyDarkMode();
+  // Sound
+  applySoundUI();
+  // Speed
+  speedMode = STORE.speedMode;
+  applySpeedUI();
+  // Pomo duration
+  pomodoroDuration = STORE.pomoDuration;
+  applyDurUI();
+  // Streak
+  updateStreak();
+  initParticles();
+  startIdleTimer();
+  updateDailyPomos();
+  updateBtnBadge();
+  updateLeaderboard();
+  updateBBCounter();
+  // Onboarding
+  if (!STORE.onboardingDone) setTimeout(() => $('onboarding').classList.add('show'), 600);
+  // First animation
+  setTimeout(() => playRandom(), STORE.onboardingDone ? 400 : 2500);
+}
+
+// ==================== ONBOARDING ====================
+function nextOnbSlide() {
+  onbSlide++;
+  if (onbSlide >= 3) { closeOnboarding(); return; }
+  document.querySelectorAll('.onb-slide').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.onb-slide[data-slide="${onbSlide}"]`).classList.add('active');
+  document.querySelectorAll('.onb-dot').forEach((d,i) => d.classList.toggle('active', i===onbSlide));
+  if (onbSlide === 2) document.querySelector('.onb-btn').textContent = '开 始';
+}
+function closeOnboarding() {
+  $('onboarding').classList.remove('show');
+  STORE.onboardingDone = true;
+}
+
+// ==================== THEME ====================
+function switchTheme(name, btn) {
+  STORE.theme = name;
+  document.body.setAttribute('data-theme', name);
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('sel'));
+  if (btn) btn.classList.add('sel');
+  document.querySelector('meta[name="theme-color"]').content =
+    name === 'cyberpunk' ? '#000a00' : name === 'retro' ? '#1a1a00' : name === 'zen' ? '#0a1a10' : name === 'candy' ? '#1a0a20' : '#0a0a2e';
+}
+
+// ==================== SPEED MODE ====================
+function toggleSpeed() { speedMode = !speedMode; STORE.speedMode = speedMode; applySpeedUI(); }
+function applySpeedUI() {
+  btnSpeed.textContent = speedMode ? '🐇' : '🐢';
+  speedToggle.classList.toggle('on', speedMode);
+}
+function getDur(d) { return speedMode ? Math.max(400, d * 0.4) : d; }
+
+// ==================== DARK MODE ====================
+function applyDarkMode() {
+  document.body.classList.toggle('dark-mode', darkMode);
+  btnDark.textContent = darkMode ? '☀️' : '🌙';
+  STORE.darkMode = darkMode;
+}
+function toggleDark() { darkMode = !darkMode; applyDarkMode(); }
+
+// ==================== SOUND ====================
+function toggleSound() { STORE.soundOn = !STORE.soundOn; applySoundUI(); }
+function applySoundUI() { btnSound.textContent = STORE.soundOn ? '🔊' : '🔇'; }
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function getAudioCtx() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
+function playSound(type) {
+  if (!STORE.soundOn) return;
+  try {
+    const ctx = getAudioCtx(), now = ctx.currentTime, g = ctx.createGain();
+    g.connect(ctx.destination); g.gain.setValueAtTime(0.25, now);
+
+    if (type === 'quake') { for (let i=0;i<8;i++){ const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(40+Math.random()*60,now+i*.06);o.connect(g);o.start(now+i*.06);o.stop(now+i*.06+.07); } }
+    else if (type === 'boing') { const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(200,now);o.frequency.exponentialRampToValueAtTime(600,now+.1);o.frequency.exponentialRampToValueAtTime(400,now+.2);o.connect(g);g.gain.exponentialRampToValueAtTime(.01,now+.3);o.start(now);o.stop(now+.3); }
+    else if (type === 'spin') { const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(800,now);o.frequency.exponentialRampToValueAtTime(100,now+.4);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(2000,now);o.connect(f);f.connect(g);g.gain.setValueAtTime(.18,now);g.gain.exponentialRampToValueAtTime(.01,now+.4);o.start(now);o.stop(now+.4); }
+    else if (type === 'bullet') { const o=ctx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(300,now);o.frequency.exponentialRampToValueAtTime(1200,now+.15);o.connect(g);g.gain.exponentialRampToValueAtTime(.2,now);g.gain.exponentialRampToValueAtTime(.01,now+.2);o.start(now);o.stop(now+.2); }
+    else if (type === 'drop') { const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(1000,now);o.frequency.exponentialRampToValueAtTime(200,now+.5);o.connect(g);g.gain.setValueAtTime(.18,now);g.gain.exponentialRampToValueAtTime(.01,now+.5);o.start(now);o.stop(now+.5); }
+    else if (type === 'type') { for (let i=0;i<10;i++){ const o=ctx.createOscillator();o.type='square';o.frequency.setValueAtTime(800+Math.random()*200,now+i*.12);const eg=ctx.createGain();eg.gain.setValueAtTime(.12,now+i*.12);eg.gain.exponentialRampToValueAtTime(.01,now+i*.12+.04);o.connect(eg);eg.connect(g);o.start(now+i*.12);o.stop(now+i*.12+.04); } }
+    else if (type === 'jello') { const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(300,now);o.frequency.setValueAtTime(350,now+.1);o.frequency.setValueAtTime(250,now+.2);o.frequency.setValueAtTime(280,now+.4);o.connect(g);g.gain.setValueAtTime(.18,now);g.gain.exponentialRampToValueAtTime(.01,now+.5);o.start(now);o.stop(now+.5); }
+    else if (type === 'neon') { for (let i=0;i<5;i++){ const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(200+i*300,now+i*.2);const eg=ctx.createGain();eg.gain.setValueAtTime(.08,now+i*.2);eg.gain.exponentialRampToValueAtTime(.01,now+i*.2+.15);o.connect(eg);eg.connect(g);o.start(now+i*.2);o.stop(now+i*.2+.15); } }
+    else if (type === 'heart') { for (let i=0;i<4;i++){ const t=now+i*.35;const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(60,t);const eg=ctx.createGain();eg.gain.setValueAtTime(.25,t);eg.gain.exponentialRampToValueAtTime(.01,t+.1);o.connect(eg);eg.connect(g);o.start(t);o.stop(t+.1); } }
+    else if (type === 'glitch') { for (let i=0;i<12;i++){ const o=ctx.createOscillator();o.type='square';o.frequency.setValueAtTime(100+Math.random()*2000,now+i*.08);const eg=ctx.createGain();eg.gain.setValueAtTime(.06,now+i*.08);eg.gain.exponentialRampToValueAtTime(.01,now+i*.08+.05);o.connect(eg);eg.connect(g);o.start(now+i*.08);o.stop(now+i*.08+.05); } }
+    else if (type === 'ultimate') { [523,659,784,1047].forEach((freq,i)=>{ const o=ctx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(freq,now+i*.15);const eg=ctx.createGain();eg.gain.setValueAtTime(.18,now+i*.15);eg.gain.exponentialRampToValueAtTime(.01,now+i*.15+.3);o.connect(eg);eg.connect(g);o.start(now+i*.15);o.stop(now+i*.15+.3); }); }
+    else if (type === 'complete') { [523,659,784,1047,784,1047].forEach((freq,i)=>{ const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(freq,now+i*.12);const eg=ctx.createGain();eg.gain.setValueAtTime(.18,now+i*.12);eg.gain.exponentialRampToValueAtTime(.01,now+i*.12+.2);o.connect(eg);eg.connect(g);o.start(now+i*.12);o.stop(now+i*.12+.2); }); }
+
+    setTimeout(() => g.disconnect(), 3000);
+  } catch(e){}
+}
+
+// ==================== VIBRATION ====================
+function vibrate(pattern) { if (navigator.vibrate) try { navigator.vibrate(pattern); } catch(e){} }
+
+// ==================== NOTIFICATIONS ====================
+async function requestNotification() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') { STORE.notificationGranted = true; return; }
+  if (Notification.permission === 'denied') return;
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') STORE.notificationGranted = true;
+}
+function sendNotification(title, body) {
+  if (!STORE.notificationGranted || !('Notification' in window)) return;
+  try { new Notification(title, { body, icon: './icons/icon-192.png', tag: 'pomodoro' }); } catch(e){}
+}
+
+// ==================== POMODORO DURATION ====================
+function setPomoDur(mins, btn) {
+  pomodoroDuration = mins;
+  STORE.pomoDuration = mins;
+  applyDurUI();
+}
+function applyDurUI() {
+  document.querySelectorAll('.dur-opt').forEach(b => {
+    const v = parseInt(b.textContent);
+    b.classList.toggle('sel', v === pomodoroDuration);
+  });
+}
+
+// ==================== STREAK ====================
+function updateStreak() {
+  const today = YMD(), last = STORE.lastDate;
+  if (last === today) return;
+  if (!last) { STORE.streak = 1; }
+  else {
+    const diff = (new Date(today) - new Date(last)) / 86400000;
+    if (diff === 1) STORE.streak++;
+    else if (diff > 1) STORE.streak = 1;
+  }
+  STORE.lastDate = today;
+  if (STORE.streak === 7) showToast('🔥 连续打卡7天！劳模勋章解锁！');
+  if (STORE.streak === 30) showToast('👑 连续打卡30天！铁人勋章解锁！');
+}
+function YMD() { return new Date().toISOString().split('T')[0]; }
+
+// ==================== IDLE TIMER ====================
+function startIdleTimer() {
+  idleSeconds = 0;
+  clearInterval(idleInterval);
+  idleInterval = setInterval(() => { idleSeconds++; updateIdleDisplay(); }, 1000);
+}
+function updateIdleDisplay() {
+  const m = Math.floor(idleSeconds / 60), s = idleSeconds % 60;
+  idleTimer.textContent = `摸鱼时长 ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (idleSeconds >= 5) idleTimer.classList.add('visible');
+  if (idleSeconds >= 120) idleTimer.classList.add('warning');
+}
+function getIdleMinutes() { return Math.floor(idleSeconds / 60); }
+
+// ==================== UPDATE DAILY POMOS ====================
+function updateDailyPomos() {
+  if (STORE.todayPomoDate !== YMD()) { STORE.pomos = 0; STORE.todayPomoDate = YMD(); }
+}
+
+// ==================== BADGE CHECK ====================
+function updateBtnBadge() {
+  const allSeen = new Set(STORE.seen.filter(s => typeof s === 'number')).size >= 10;
+  btnCollection.classList.toggle('has-badge', allSeen && !STORE.get('ultimate_unlocked', false));
+}
+
+// ==================== TOAST ====================
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg; toast.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ==================== PARTICLES PAUSE ====================
+function pauseParticles() { particlesRunning = false; }
+function resumeParticles() { particlesRunning = true; }
+
+// ==================== LEADERBOARD ====================
+function updateLeaderboard() {
+  let lb = STORE.leaderboard;
+  // Merge user into leaderboard
+  const userEntry = { name: '你', score: STORE.counter + STORE.pomos * 10 + STORE.totalFocus };
+  const all = [...lb.filter(e => e.name !== '你'), userEntry];
+  // Fill with mock if < 8
+  while (all.length < 8) {
+    const n = MOCK_NAMES[Math.floor(Math.random() * MOCK_NAMES.length)];
+    if (!all.find(e => e.name === n)) all.push({ name: n, score: Math.floor(Math.random() * 200 + STORE.counter * 0.5) });
+  }
+  all.sort((a, b) => b.score - a.score);
+  STORE.leaderboard = all.filter(e => e.name !== '你');
+}
+function buildLeaderboardUI() {
+  let lb = STORE.leaderboard;
+  const userEntry = { name: '你', score: STORE.counter + STORE.pomos * 10 + STORE.totalFocus };
+  const all = [...lb.filter(e => e.name !== '你'), userEntry].sort((a, b) => b.score - a.score);
+  const medals = ['gold', 'silver', 'bronze'];
+  $('lbList').innerHTML = all.slice(0, 8).map((e, i) =>
+    `<div class="lb-item ${e.name === '你' ? 'you' : ''}">
+      <div class="lb-rank ${i < 3 ? medals[i] : ''}">${i + 1}</div>
+      <div class="lb-name">${e.name}</div>
+      <div class="lb-score">${e.score}</div>
+    </div>`
+  ).join('');
+}
+
+// ==================== EXPORT/IMPORT DATA ====================
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('bored_')) data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `无聊了么_备份_${YMD()}.json`;
+  a.click();
+  showToast('📥 数据已导出！');
+}
+function importData() { $('importFile').click(); }
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
+      showToast('📤 数据已恢复！刷新页面生效');
+      setTimeout(() => location.reload(), 1500);
+    } catch { showToast('❌ 文件格式错误'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ==================== WEEKLY REPORT ====================
+function genWeeklyReport() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 375; canvas.height = 550;
+  const ctx = canvas.getContext('2d');
+
+  // BG
+  const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  bgGrad.addColorStop(0, '#0a0a2e'); bgGrad.addColorStop(1, '#1a0a3e');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+  ctx.font = 'bold 20px sans-serif'; ctx.fillText('📊 本周摸鱼报告', canvas.width / 2, 60);
+
+  ctx.font = '12px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.fillText(`${YMD()} 生成`, canvas.width / 2, 85);
+
+  // Accent line
+  const g = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  g.addColorStop(0, '#FF6B35'); g.addColorStop(1, '#FF3B8B');
+  ctx.fillStyle = g; ctx.fillRect(30, 100, canvas.width - 60, 2);
+
+  const stats = [
+    { l:'累计鞭策', v:STORE.counter + ' 次', y:140 },
+    { l:'本周番茄', v:STORE.pomos + ' 个', y:190 },
+    { l:'累计专注', v:STORE.totalFocus + ' 分钟', y:240 },
+    { l:'连续打卡', v:STORE.streak + ' 天', y:290 },
+    { l:'动画收集', v:new Set(STORE.seen.filter(s => typeof s === 'number')).size + '/10', y:340 },
+    { l:'摸鱼时长(本次)', v:getIdleMinutes() + ' 分钟', y:390 },
+  ];
+  stats.forEach(s => {
+    ctx.font = '14px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.fillText(s.l, canvas.width / 2, s.y);
+    ctx.font = 'bold 36px sans-serif'; ctx.fillStyle = '#FF6B35';
+    ctx.fillText(s.v, canvas.width / 2, s.y + 36);
+  });
+
+  // Footer
+  ctx.fillStyle = g; ctx.fillRect(30, 440, canvas.width - 60, 2);
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#FFD700';
+  ctx.fillText('— 无聊了么 · 摸鱼终结者 —', canvas.width / 2, 480);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.25)';
+  ctx.fillText('扫码下载，一起被鞭策！', canvas.width / 2, 510);
+
+  // Download
+  const a = document.createElement('a');
+  a.download = `摸鱼周报_${YMD()}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('📊 周报已生成！');
+}
+
+// ==================== SHAKE DETECTION ====================
+let lastShake = 0;
+function initShakeDetection() {
+  if (window.DeviceMotionEvent) {
+    window.addEventListener('devicemotion', e => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const magnitude = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+      if (magnitude > 22 && Date.now() - lastShake > 1500 && !isAnimating && !pomoOverlay.classList.contains('show')) {
+        lastShake = Date.now();
+        playRandom();
+        showToast('🤳 摇一摇触发！');
+      }
+    });
+  }
+}
+
+// ==================== CORE: PLAY ANIMATION ====================
+function playRandom() {
+  if (isAnimating) return;
+  isAnimating = true;
+  hidePostActions();
+
+  const unseen = ANIMATIONS.map((a,i) => i).filter(i => !STORE.seen.includes(i));
+  let idx;
+  if (unseen.length > 0) {
+    idx = unseen[Math.floor(Math.random() * unseen.length)];
+  } else {
+    if (STORE.seen.length >= 10 && !STORE.seen.includes('ultimate')) { playUltimate(); return; }
+    do { idx = Math.floor(Math.random() * ANIMATIONS.length); }
+    while (idx === currentMode && ANIMATIONS.length > 1);
+  }
+  playAnimation(idx, ANIMATIONS[idx]);
+}
+
+function playUltimate() {
+  STORE.seen = [...STORE.seen, 'ultimate'];
+  STORE.set('ultimate_unlocked', true);
+  updateBtnBadge();
+  showToast('🌟 恭喜解锁终极奥义！！！');
+  const anim = ULTIMATE; currentMode = -1;
+  mainText.textContent = '全 部 收 集 完 毕 ！';
+  sloganLine.textContent = `— ${anim.name} ${anim.tag}`;
+  resetText();
+  const dur = getDur(anim.dur);
+  mainText.style.animation = `ultimateIn ${dur}ms ease-out`;
+  playSound('ultimate'); vibrate([100,50,100,50,200]);
+  screenFlashFx(anim); spawnEmojis(anim); burstParticles(); brandIconShake();
+  setTimeout(() => { isAnimating = false; resetText(); mainText.textContent = getSmartSlogan(); showPostActions(); }, dur + 200);
+}
+
+function playAnimation(idx, anim) {
+  currentMode = idx;
+  const slogan = Math.random() < 0.4 ? getSmartSlogan() : SLOGANS[Math.floor(Math.random() * SLOGANS.length)];
+  mainText.textContent = slogan;
+  sloganLine.textContent = `— ${anim.name} ${anim.tag}`;
+  resetText();
+
+  const animMap = { quake:'quake', boing:'boing', spin:'spinIn', bullet:'bulletIn', drop:'dropIn', type:'typeFlash', jello:'jello', neon:'neonPulse', heart:'heartbeat', glitch:'glitch' };
+  const dur = getDur(anim.dur);
+  mainText.style.animation = `${animMap[anim.cls]} ${dur}ms`;
+
+  if (anim.cls === 'quake') document.body.style.animation = `screenShake ${dur}ms ease-in-out`;
+
+  playSound(anim.cls);
+  vibrate(anim.cls==='quake'?[50,30,50,30,100]:[40,15,40]);
+  screenFlashFx(anim); spawnEmojis(anim); burstParticles(); brandIconShake();
+  STORE.counter++;
+
+  if (!STORE.seen.includes(idx) && idx >= 0) STORE.seen = [...STORE.seen, idx];
+  updateStreak(); updateBtnBadge(); updateLeaderboard();
+
+  setTimeout(() => {
+    isAnimating = false; resetText(); document.body.style.animation = '';
+    showPostActions();
+  }, dur + 200);
+}
+
+function resetText() {
+  mainText.style.animation = 'none'; mainText.style.transform = '';
+  mainText.style.clipPath = ''; mainText.style.filter = '';
+  mainText.style.color = 'var(--text)'; mainText.style.textShadow = '';
+  mainText.offsetHeight;
+}
+
+// ==================== POST ACTIONS ====================
+function showPostActions() { postActions.classList.add('show'); }
+function hidePostActions() { postActions.classList.remove('show'); }
+function dismissPostActions() { hidePostActions(); }
+
+// ==================== SCREEN FLASH ====================
+function screenFlashFx(anim) {
+  screenFlash.style.background = anim.bg + '33';
+  setTimeout(() => screenFlash.style.background = 'transparent', 200);
+  setTimeout(() => { screenFlash.style.background = anim.bg + '15'; }, anim.dur * 0.4);
+  setTimeout(() => { screenFlash.style.background = 'transparent'; }, anim.dur * 0.5 + 100);
+}
+
+// ==================== EMOJI SPAWN ====================
+function spawnEmojis(anim) {
+  for (let i = 0; i < 10 + Math.floor(Math.random() * 8); i++) {
+    setTimeout(() => {
+      const el = document.createElement('div'); el.className = 'floating-emoji';
+      el.textContent = anim.emojis[Math.floor(Math.random() * anim.emojis.length)];
+      el.style.left = (5 + Math.random() * 90) + '%'; el.style.top = (40 + Math.random() * 40) + '%';
+      el.style.fontSize = (16 + Math.random() * 26) + 'px';
+      el.style.animationDuration = (1.2 + Math.random() * 1.8) + 's';
+      fxLayer.appendChild(el); setTimeout(() => el.remove(), 2800);
+    }, i * 55);
+  }
+}
+
+// ==================== BURST PARTICLES ====================
+function burstParticles() {
+  const colors = ['#FF6B35','#FF3B8B','#FFD700','#00FF88','#00AAFF','#FF00FF'];
+  for (let i = 0; i < 25; i++) {
+    const el = document.createElement('div'); el.className = 'burst-particle';
+    el.style.left = '50%'; el.style.top = '45%';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const angle = Math.random() * Math.PI * 2, dist = 40 + Math.random() * 160;
+    el.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+    el.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+    el.style.width = (3 + Math.random() * 7) + 'px'; el.style.height = el.style.width;
+    el.style.animationDuration = (.4 + Math.random() * .6) + 's';
+    fxLayer.appendChild(el); setTimeout(() => el.remove(), 1300);
+  }
+}
+
+// ==================== BRAND ICON SHAKE ====================
+function brandIconShake() {
+  brandIcon.textContent = '😤'; brandIcon.classList.add('shaking');
+  setTimeout(() => { brandIcon.classList.remove('shaking'); brandIcon.textContent = '😴'; }, 1000);
+}
+
+// ==================== POMODORO ====================
+function startPomodoro(mins) {
+  mins = mins || pomodoroDuration;
+  hidePostActions(); updateDailyPomos();
+  pomodoroTotal = mins * 60; pomodoroSeconds = pomodoroTotal;
+  pomodoroRunning = true; pomodoroPaused = false;
+  pomoOverlay.classList.add('show');
+  pomoLabel.textContent = '专注中'; pomoCircle.classList.remove('break');
+  pomoPause.textContent = '⏸'; pomoBreakTip.classList.remove('show');
+  clearTimeout(breakTipTimer);
+  updatePomodoroDisplay();
+  pomoSessions.textContent = `今日完成 ${STORE.pomos} 个番茄`;
+  document.body.style.animation = 'none';
+  clearInterval(pomodoroInterval);
+  pomodoroInterval = setInterval(pomodoroTick, 1000);
+
+  // Request notification permission
+  requestNotification();
+
+  pauseParticles();
+}
+
+function pomodoroTick() {
+  if (!pomodoroRunning || pomodoroPaused) return;
+  pomodoroSeconds--;
+  updatePomodoroDisplay();
+  if (pomodoroSeconds <= 0) completePomodoro();
+}
+function updatePomodoroDisplay() {
+  const m = Math.floor(pomodoroSeconds / 60), s = pomodoroSeconds % 60;
+  pomoTime.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const ratio = 1 - (pomodoroSeconds / pomodoroTotal);
+  pomoCircle.style.strokeDashoffset = ratio * 515.2;
+  if (ratio > .8) pomoCircle.style.stroke = '#00FF88';
+  else if (ratio > .5) pomoCircle.style.stroke = '#FFD700';
+  else pomoCircle.style.stroke = 'var(--accent)';
+}
+function togglePomodoro() {
+  pomodoroPaused = !pomodoroPaused;
+  pomoPause.textContent = pomodoroPaused ? '▶' : '⏸';
+  pomoLabel.textContent = pomodoroPaused ? '已暂停' : '专注中';
+}
+function cancelPomodoro() {
+  pomodoroRunning = false; pomodoroPaused = false;
+  clearInterval(pomodoroInterval); clearTimeout(breakTipTimer);
+  pomoOverlay.classList.remove('show'); pomoBreakTip.classList.remove('show');
+  resumeParticles();
+}
+function completePomodoro() {
+  pomodoroRunning = false;
+  clearInterval(pomodoroInterval);
+  STORE.pomos++; STORE.totalFocus += Math.round(pomodoroTotal / 60);
+  pomoSessions.textContent = `今日完成 ${STORE.pomos} 个番茄`;
+  pomoTime.textContent = '00:00'; pomoLabel.textContent = '完成！';
+  playSound('complete'); vibrate([200,100,200,100,400]);
+
+  // Notification
+  sendNotification('🍅 番茄钟完成！', `已专注 ${Math.round(pomodoroTotal/60)} 分钟，休息一下吧~`);
+
+  // Celebration
+  for (let i = 0; i < 18; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div'); el.className = 'floating-emoji';
+      el.textContent = ['🎉','🏆','🍅','💪','🔥','✨','🎊'][Math.floor(Math.random()*7)];
+      el.style.left = (8 + Math.random() * 84) + '%'; el.style.top = (35 + Math.random() * 45) + '%';
+      el.style.fontSize = (22 + Math.random() * 28) + 'px';
+      el.style.animationDuration = (1.8 + Math.random() * 2) + 's';
+      fxLayer.appendChild(el); setTimeout(() => el.remove(), 3800);
+    }, i * 45);
+  }
+  burstParticles();
+  showToast('🍅 番茄钟完成！休息5分钟~');
+  updateLeaderboard();
+
+  setTimeout(() => startBreak(), 2500);
+}
+function startBreak() {
+  pomodoroTotal = 5 * 60; pomodoroSeconds = pomodoroTotal;
+  pomodoroRunning = true; pomodoroPaused = false;
+  pomoLabel.textContent = '休息中'; pomoCircle.classList.add('break');
+  pomoPause.textContent = '⏸'; pomoCircle.style.stroke = 'var(--green)';
+  pomoBreakTip.classList.add('show');
+  showBreakTip();
+  updatePomodoroDisplay();
+  clearInterval(pomodoroInterval);
+  pomodoroInterval = setInterval(() => {
+    if (!pomodoroRunning || pomodoroPaused) return;
+    pomodoroSeconds--;
+    updatePomodoroDisplay();
+    if (pomodoroSeconds <= 0) {
+      pomodoroRunning = false; clearInterval(pomodoroInterval);
+      pomoLabel.textContent = '休息结束！'; pomoBreakTip.classList.remove('show');
+      clearTimeout(breakTipTimer);
+      showToast('💪 休息好了，继续加油！');
+      sendNotification('💪 休息结束！', '继续下一个番茄钟吧~');
+      setTimeout(() => { pomoOverlay.classList.remove('show'); resumeParticles(); }, 2000);
+    }
+  }, 1000);
+}
+function showBreakTip() {
+  pomoBreakTip.textContent = BREAK_TIPS[Math.floor(Math.random() * BREAK_TIPS.length)];
+  breakTipTimer = setTimeout(showBreakTip, 5000);
+}
+
+// ==================== SOCIAL SHARE CARD ====================
+function openShare() { hidePostActions(); drawShareCard(); shareModal.classList.add('show'); }
+function closeShare() { shareModal.classList.remove('show'); }
+function drawShareCard() {
+  const canvas = shareCanvas, ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#0a0a2e'); bgGrad.addColorStop(.5, '#1a0a3e'); bgGrad.addColorStop(1, '#2d0a4e');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = .06;
+  for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(Math.random()*W, Math.random()*H, 40+Math.random()*80, 0, Math.PI*2); ctx.fillStyle = i%2?'#FF6B35':'#FF3B8B'; ctx.fill(); }
+  ctx.globalAlpha = 1;
+  for (let i = 0; i < 25; i++) { const x=Math.random()*W,y=Math.random()*H*.6; ctx.beginPath(); ctx.arc(x,y,Math.random()*2,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,'+(.2+Math.random()*.5)+')'; ctx.fill(); }
+  const accGrad = ctx.createLinearGradient(0, 0, W, 0); accGrad.addColorStop(0,'#FF6B35'); accGrad.addColorStop(.5,'#FF3B8B'); accGrad.addColorStop(1,'#FF6B35');
+  ctx.fillStyle = accGrad; ctx.fillRect(30, 60, W - 60, 3);
+  ctx.font = '44px sans-serif'; ctx.fillText('😴', W/2, 135);
+  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+  ctx.fillText('无 聊 了 么', W/2, 180);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillText('摸鱼终结者 · 鞭策你干正事的App', W/2, 205);
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(60, 228, W - 120, 1);
+
+  const lashings = STORE.counter, beatPercent = Math.min(99, Math.floor(lashings / 3 + Math.random() * 10));
+  ctx.font = 'bold 60px sans-serif'; ctx.fillStyle = '#FF6B35'; ctx.textAlign = 'center';
+  ctx.fillText(String(lashings), W/2 - 15, 300);
+  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText('次', W/2 + 52, 300);
+  ctx.font = '13px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText('累计被鞭策', W/2, 330);
+  ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = '#FFD700'; ctx.fillText(`击败 ${beatPercent}% 摸鱼人`, W/2, 375);
+
+  const stats = [
+    { l:'🎬 已收集', v:`${new Set(STORE.seen.filter(s=>typeof s==='number')).size}/10` },
+    { l:'🔥 连续打卡', v:`${STORE.streak}天` },
+    { l:'🍅 今日番茄', v:`${STORE.pomos}个` },
+    { l:'⏱ 本次摸鱼', v:`${getIdleMinutes()}分钟` },
+  ];
+  const sx = [70, 160, 250, 330];
+  stats.forEach((s, i) => {
+    ctx.font = '10px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.textAlign = 'center';
+    ctx.fillText(s.l, sx[i], 425);
+    ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText(s.v, sx[i], 450);
+  });
+
+  ctx.fillStyle = accGrad; ctx.fillRect(30, 478, W - 60, 2);
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#FFD700'; ctx.fillText('扫码下载「无聊了么」，一起被鞭策！', W/2, 518);
+  ctx.fillStyle = '#fff'; ctx.fillRect(W/2 - 35, 530, 70, 70);
+  ctx.fillStyle = '#0a0a2e';
+  for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) { if (Math.random() > .5) ctx.fillRect(W/2 - 30 + c*9, 535 + r*9, 5, 5); }
+  ctx.font = '9px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillText('「无聊了么」· 摸鱼终结者', W/2, 586);
+
+  // Web Share API availability
+  if (navigator.share && navigator.canShare) {
+    $('shareNativeBtn').style.display = 'inline-flex';
+  }
+}
+function saveShareCard() {
+  const link = document.createElement('a'); link.download = '无聊了么_鞭策卡片.png';
+  link.href = shareCanvas.toDataURL('image/png'); link.click();
+  showToast('💾 卡片已保存！');
+}
+async function nativeShare() {
+  const blob = await new Promise(r => shareCanvas.toBlob(r, 'image/png'));
+  const file = new File([blob], '无聊了么_鞭策卡片.png', { type: 'image/png' });
+  try {
+    await navigator.share({ title: '无聊了么 - 摸鱼终结者', text: `我已被鞭策${STORE.counter}次，击败${Math.min(99,Math.floor(STORE.counter/3+10))}%摸鱼人！`, files: [file] });
+  } catch(e) {
+    // Fallback to save
+    saveShareCard();
+  }
+}
+
+// ==================== COLLECTION PAGE ====================
+function openCollection() { buildCollectionPage(); collectionPage.classList.add('show'); }
+function closeCollection() { collectionPage.classList.remove('show'); }
+function buildCollectionPage() {
+  updateDailyPomos();
+  $('statLashings').textContent = STORE.counter;
+  $('statStreak').textContent = STORE.streak;
+  $('statPomos').textContent = STORE.pomos;
+  $('statFocus').textContent = STORE.totalFocus + 'min';
+  const badges = [
+    { id:'初来乍到', emoji:'👶', cond:STORE.counter>=1 },
+    { id:'鞭策达人', emoji:'💥', cond:STORE.counter>=10 },
+    { id:'百鞭不倒', emoji:'💯', cond:STORE.counter>=100 },
+    { id:'劳模勋章', emoji:'🏅', cond:STORE.streak>=7 },
+    { id:'铁人勋章', emoji:'🦾', cond:STORE.streak>=30 },
+    { id:'番茄达人', emoji:'🍅', cond:STORE.pomos>=5 },
+    { id:'番茄大师', emoji:'🎖️', cond:STORE.pomos>=25 },
+    { id:'全收集', emoji:'👑', cond:STORE.get('ultimate_unlocked',false) },
+  ];
+  $('badgesContainer').innerHTML = badges.map(b => `<div class="badge ${b.cond?'unlocked':'locked'}"><span>${b.emoji}</span><span class="badge-id">${b.id}</span></div>`).join('');
+  const allAnims = [...ANIMATIONS.map((a,i)=>({...a,i,secret:false})),{...ULTIMATE,i:'ultimate',secret:true}];
+  $('animListContainer').innerHTML = allAnims.map(a => {
+    const seen = STORE.seen.includes(a.i);
+    return `<div class="anim-item ${seen?'':'unseen'} ${a.secret?'secret':''}"><span class="check">${seen?'✅':'⬜'}</span><span>${a.name}</span></div>`;
+  }).join('');
+  $('collectionSub').textContent = new Set(STORE.seen.filter(s=>typeof s==='number')).size>=10?'🌟 全部收集！终极奥义已解锁！':'收集所有动画，解锁隐藏模式！';
+  buildLeaderboardUI();
+  // Theme selector highlight
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('sel', b.dataset.theme === STORE.theme));
+  // Speed toggle
+  speedToggle.classList.toggle('on', speedMode);
+
+  // Blind box roast collection
+  const bbCollected = STORE.bbCollected;
+  $('bbRoastList').innerHTML = ROASTS.map(r => {
+    const seen = bbCollected.includes(r.id);
+    return `<div class="bb-roast-item ${seen?'collected':'unseen'}"><span>${seen?r.emoji:'❓'}</span><span>${seen?r.title:'未解锁'}</span></div>`;
+  }).join('');
+}
+
+// ==================== BLIND BOX ====================
+function openBlindBox() {
+  updateBBProgress();
+  $('bbOverlay').classList.add('show');
+  // Reset box
+  const box = $('bbBox');
+  box.classList.remove('opening');
+  box.style.transform = ''; box.style.opacity = '1';
+  box.textContent = '🎁';
+}
+function closeBlindBox() { $('bbOverlay').classList.remove('show'); }
+
+function openBox() {
+  const box = $('bbBox');
+  if (box.classList.contains('opening')) return;
+  box.classList.add('opening');
+  playSound('drop'); vibrate([30,20,60]);
+
+  setTimeout(() => {
+    closeBlindBox();
+    // Merge custom roasts into pool
+    const customRoasts = STORE.customRoasts;
+    const pool = [...ROASTS, ...customRoasts.map((r,i) => ({...r, id: 100+i, _custom: true}))];
+    const idx = Math.floor(Math.random() * pool.length);
+    showRoast(pool[idx]);
+  }, 800);
+}
+
+function showRoast(roast) {
+  // Record collection
+  const collected = STORE.bbCollected;
+  if (!collected.includes(roast.id)) {
+    STORE.bbCollected = [...collected, roast.id];
+  }
+  updateBBCounter();
+
+  // Check if all collected
+  if (STORE.bbCollected.length >= 20 && collected.length < 20) {
+    setTimeout(() => showToast('🏆 恭喜！全部嘲讽语收集完毕！'), 1200);
+  }
+
+  // Fill card
+  $('roastEmoji').textContent = roast.emoji;
+  $('roastTitle').textContent = roast.title;
+  $('roastSubtitle').textContent = roast.subtitle;
+  const tagText = roast._custom
+    ? `${roast.tag || '#自定义'} · 来自好友`
+    : `${roast.tag} · #${roast.id}/20`;
+  $('roastTag').textContent = tagText;
+
+  // Reset animation
+  const card = $('roastCard');
+  card.classList.remove('show');
+  void card.offsetHeight; // force reflow
+
+  $('roastEmoji').style.animation = 'none';
+  $('roastTitle').style.animation = 'none';
+  void $('roastEmoji').offsetHeight;
+
+  // Apply entry animation
+  const animName = roast.anim || 'roastSlam';
+  const dur = speedMode ? '0.5s' : '0.8s';
+  $('roastEmoji').style.animation = `${animName} ${dur} ease-out`;
+  setTimeout(() => {
+    $('roastTitle').style.animation = `${animName} ${dur} ease-out 0.15s both`;
+  }, 50);
+
+  card.classList.add('show');
+
+  // Sound + vibration
+  playSound('boing'); vibrate([50,30,80]);
+
+  // Burst effect
+  screenFlash.style.background = roast.bg + '33';
+  setTimeout(() => screenFlash.style.background = 'transparent', 300);
+
+  // Floating emojis
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div'); el.className = 'floating-emoji';
+      el.textContent = roast.emoji;
+      el.style.left = (10 + Math.random() * 80) + '%';
+      el.style.top = (40 + Math.random() * 40) + '%';
+      el.style.fontSize = (20 + Math.random() * 24) + 'px';
+      fxLayer.appendChild(el); setTimeout(() => el.remove(), 2500);
+    }, i * 60);
+  }
+
+  // Store current roast for sharing
+  window._currentRoast = roast;
+}
+
+function closeRoast() {
+  $('roastCard').classList.remove('show');
+  $('roastEmoji').style.animation = 'none';
+  $('roastTitle').style.animation = 'none';
+}
+function againBox() {
+  closeRoast();
+  setTimeout(() => openBlindBox(), 300);
+}
+
+async function shareRoast() {
+  const roast = window._currentRoast;
+  if (!roast) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 375; canvas.height = 520;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // BG gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#0a0a2e'); bgGrad.addColorStop(.5, '#1a0a3e'); bgGrad.addColorStop(1, '#2d0a4e');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+
+  // Accent dots
+  ctx.globalAlpha = .04;
+  for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.arc(Math.random()*W, Math.random()*H, 30+Math.random()*60, 0, Math.PI*2); ctx.fillStyle = i%2?'#FF6B35':'#FF3B8B'; ctx.fill(); }
+  ctx.globalAlpha = 1;
+
+  // Top line
+  const lineGrad = ctx.createLinearGradient(0,0,W,0);
+  lineGrad.addColorStop(0,'#FF6B35'); lineGrad.addColorStop(.5,'#FF3B8B'); lineGrad.addColorStop(1,'#FFD700');
+  ctx.fillStyle = lineGrad; ctx.fillRect(20, 30, W-40, 2);
+
+  // Header
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.textAlign = 'center';
+  ctx.fillText('🎁 无聊了么 · 盲盒嘲讽', W/2, 60);
+
+  // Emoji
+  ctx.font = '72px sans-serif';
+  ctx.fillText(roast.emoji, W/2, 170);
+
+  // Title
+  ctx.font = 'bold 24px sans-serif'; ctx.fillStyle = '#fff';
+  const titleLines = wrapText(ctx, roast.title, W - 60);
+  titleLines.forEach((line, i) => ctx.fillText(line, W/2, 215 + i * 34));
+
+  // Subtitle
+  const subY = 215 + titleLines.length * 34 + 20;
+  ctx.font = '15px sans-serif'; ctx.fillStyle = '#FF6B35';
+  const subLines = wrapText(ctx, roast.subtitle, W - 80);
+  subLines.forEach((line, i) => ctx.fillText(line, W/2, subY + i * 24));
+
+  // Tag
+  const tagY = subY + subLines.length * 24 + 20;
+  ctx.font = '12px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.4)';
+  const tagLabel = roast._custom
+    ? (roast.tag || '#自定义') + ' · 来自好友'
+    : roast.tag + ' · #' + roast.id + '/20';
+  ctx.fillText(tagLabel, W/2, tagY);
+
+  // Divider
+  const divY = tagY + 25;
+  ctx.fillStyle = lineGrad; ctx.fillRect(20, divY, W-40, 2);
+
+  // Footer stats
+  ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.3)';
+  ctx.fillText(`已收集 ${STORE.bbCollected.length}/20 款嘲讽`, W/2, divY + 25);
+
+  ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = '#FFD700';
+  ctx.fillText('— 来自「无聊了么 · 摸鱼终结者」—', W/2, divY + 50);
+
+  ctx.font = '10px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.2)';
+  ctx.fillText('扫码下载，开盒嘲讽你的好友！', W/2, divY + 72);
+
+  // Try native share first
+  if (navigator.share && navigator.canShare) {
+    try {
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      const file = new File([blob], `盲盒嘲讽_${roast.tag}.png`, { type: 'image/png' });
+      await navigator.share({
+        title: '无聊了么 · 盲盒嘲讽',
+        text: `${roast.emoji} ${roast.title}\n${roast.subtitle}\n${roast.tag}`,
+        files: [file]
+      });
+      showToast('📤 嘲讽已分享！');
+      return;
+    } catch(e) { /* user cancelled or no file share support, fall through to save */ }
+  }
+
+  // Fallback: download
+  const a = document.createElement('a');
+  a.download = `盲盒嘲讽_${roast.tag}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('📤 嘲讽卡片已保存！');
+}
+
+function wrapText(ctx, text, maxWidth) {
+  const lines = []; let line = '';
+  for (const char of text) {
+    if (ctx.measureText(line + char).width > maxWidth) { lines.push(line); line = char; }
+    else line += char;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function updateBBProgress() {
+  $('bbProgress').textContent = STORE.bbCollected.length;
+}
+function updateBBCounter() {
+  const c = $('bbCounter');
+  const customN = STORE.customRoasts.length;
+  const baseN = STORE.bbCollected.length;
+  if (customN > 0) {
+    c.textContent = `🎁 ${baseN}/20+${customN}`;
+  } else {
+    c.textContent = `🎁 ${baseN}/20`;
+  }
+  c.classList.add('show');
+  if (baseN >= 20 && customN === 0) c.textContent = '🎁 全收集！';
+}
+
+// ==================== CUSTOM ROAST EDITOR ====================
+const BB_EMOJIS = ['🤡','🦥','🫠','💀','🤖','🐸','🦦','🧟','🦉','🐢','🤯','🪩','🦊','🐙','🦄','🐊','🦈','🐒','🐣','🐶','🐱','🐹','🔥','💎','🎪','🎭','🎲','🎯','🧨','💣'];
+const BB_COLORS = ['#ff3300','#ff6600','#00ccff','#9900ff','#00ff41','#ff69b4','#ffcc00','#666666','#1a1a5e','#00aa88','#ff0044','#ff00ff','#8B4513','#FFD700','#0000aa','#4a0080','#ff4500','#2196F3','#FF8C00','#e91e63'];
+const BB_ANIMS = [
+  {name:'砸入',val:'roastSlam'},{name:'弹跳',val:'roastBounce'},{name:'掉落',val:'roastDrop'},
+  {name:'旋转',val:'roastSpin'},{name:'故障',val:'roastGlitch'},{name:'果冻',val:'roastJello'},
+  {name:'翻转',val:'roastFlip'},{name:'震动',val:'roastShake'},{name:'缩放',val:'roastZoom'},
+  {name:'漂浮',val:'roastFloat'},{name:'变形',val:'roastMorph'},{name:'摇摆',val:'roastSwing'},
+  {name:'弹性',val:'roastElastic'},{name:'揭晓',val:'roastReveal'},{name:'冲拳',val:'roastPunch'},
+  {name:'展开',val:'roastUnfold'},{name:'扭转',val:'roastTwist'},{name:'升起',val:'roastRise'},
+  {name:'爆炸',val:'roastExplode'},{name:'火箭',val:'roastRocket'},{name:'钻头',val:'roastDrill'},
+  {name:'闪电',val:'roastLightning'},{name:'螺旋',val:'roastSpiral'},{name:'陨石',val:'roastMeteor'},
+  {name:'磁铁',val:'roastMagnet'},{name:'忍者',val:'roastNinja'},{name:'波浪',val:'roastWave'},
+  {name:'传送',val:'roastPortal'},{name:'豆子',val:'roastBean'},{name:'弹簧',val:'roastSpring'},
+  {name:'鞭打',val:'roastWhip'},{name:'终极',val:'roastUltimate'},
+];
+
+let editorState = { emoji:'🤡', color:'#ff3300', anim:'roastSlam', editIdx: -1 };
+
+function initEditorPickers() {
+  // Emoji picker
+  $('emojiPicker').innerHTML = BB_EMOJIS.map(e =>
+    `<div class="bb-emoji-opt ${e===editorState.emoji?'sel':''}" data-emoji="${e}" onclick="selectEditorEmoji('${e}')">${e}</div>`
+  ).join('');
+  // Color picker
+  $('colorPicker').innerHTML = BB_COLORS.map(c =>
+    `<div class="bb-color-opt ${c===editorState.color?'sel':''}" style="background:${c}" data-color="${c}" onclick="selectEditorColor('${c}')"></div>`
+  ).join('');
+  // Anim picker
+  $('animPicker').innerHTML = BB_ANIMS.map(a =>
+    `<div class="bb-anim-opt ${a.val===editorState.anim?'sel':''}" data-anim="${a.val}" onclick="selectEditorAnim('${a.val}')">${a.name}</div>`
+  ).join('');
+}
+
+function selectEditorEmoji(e) {
+  editorState.emoji = e;
+  document.querySelectorAll('#emojiPicker .bb-emoji-opt').forEach(el => el.classList.toggle('sel', el.dataset.emoji === e));
+}
+function selectEditorColor(c) {
+  editorState.color = c;
+  document.querySelectorAll('#colorPicker .bb-color-opt').forEach(el => el.classList.toggle('sel', el.dataset.color === c));
+}
+function selectEditorAnim(a) {
+  editorState.anim = a;
+  document.querySelectorAll('#animPicker .bb-anim-opt').forEach(el => el.classList.toggle('sel', el.dataset.anim === a));
+}
+
+function openBBEditor() {
+  closeBlindBox();
+  editorState = { emoji:'🤡', color:'#ff3300', anim:'roastSlam', editIdx: -1 };
+  $('roastTitleInput').value = '';
+  $('roastSubInput').value = '';
+  $('roastTagInput').value = '';
+  $('roastSaveBtn').textContent = '💾 保存';
+  initEditorPickers();
+  renderCustomRoastList();
+  renderGiftHistory();
+  $('bbEditorOverlay').classList.add('show');
+}
+function closeBBEditor() {
+  $('bbEditorOverlay').classList.remove('show');
+}
+
+function saveCustomRoast() {
+  const title = $('roastTitleInput').value.trim();
+  const subtitle = $('roastSubInput').value.trim();
+  const tag = $('roastTagInput').value.trim();
+
+  if (!title) { showToast('❌ 请输入主标题'); return; }
+  if (!subtitle) { showToast('❌ 请输入副标题'); return; }
+
+  const roast = {
+    emoji: editorState.emoji,
+    title: title,
+    subtitle: subtitle,
+    tag: tag || '#自定义',
+    anim: editorState.anim,
+    bg: editorState.color,
+    createdAt: Date.now(),
+  };
+
+  const customs = [...STORE.customRoasts];
+
+  if (editorState.editIdx >= 0) {
+    // Edit existing
+    roast.createdAt = customs[editorState.editIdx].createdAt;
+    customs[editorState.editIdx] = roast;
+    showToast('✅ 嘲讽语已更新！');
+  } else {
+    if (customs.length >= 10) { showToast('❌ 最多保存10条自定义嘲讽语'); return; }
+    customs.push(roast);
+    showToast('✅ 嘲讽语已创建！');
+  }
+
+  STORE.customRoasts = customs;
+
+  // Reset form
+  $('roastTitleInput').value = '';
+  $('roastSubInput').value = '';
+  $('roastTagInput').value = '';
+  editorState.editIdx = -1;
+  $('roastSaveBtn').textContent = '💾 保存';
+  initEditorPickers();
+  renderCustomRoastList();
+  updateBBCounter();
+}
+
+function editCustomRoast(idx) {
+  const roast = STORE.customRoasts[idx];
+  if (!roast) return;
+  editorState = { emoji: roast.emoji, color: roast.bg, anim: roast.anim, editIdx: idx };
+  $('roastTitleInput').value = roast.title;
+  $('roastSubInput').value = roast.subtitle;
+  $('roastTagInput').value = roast.tag;
+  $('roastSaveBtn').textContent = '💾 更新';
+  initEditorPickers();
+  // Scroll to top
+  $('bbEditorOverlay').scrollTop = 0;
+}
+
+function deleteCustomRoast(idx) {
+  const customs = [...STORE.customRoasts];
+  customs.splice(idx, 1);
+  STORE.customRoasts = customs;
+  renderCustomRoastList();
+  updateBBCounter();
+  showToast('🗑️ 已删除');
+}
+
+function renderCustomRoastList() {
+  const customs = STORE.customRoasts;
+  $('customCount').textContent = customs.length;
+  if (customs.length === 0) {
+    $('customRoastList').innerHTML = '<div class="bb-custom-empty">还没有自定义嘲讽语<br>点击上方创建一个吧！</div>';
+    return;
+  }
+  $('customRoastList').innerHTML = customs.map((r, i) =>
+    `<div class="bb-custom-item">
+      <div class="item-emoji">${r.emoji}</div>
+      <div class="item-info">
+        <div class="item-title">${escHtml(r.title)}</div>
+        <div class="item-sub">${escHtml(r.subtitle)}</div>
+      </div>
+      <div class="item-actions">
+        <button class="bb-item-btn gift" onclick="giftCustomRoast(${i})" title="送礼">🎁</button>
+        <button class="bb-item-btn" onclick="previewCustomRoast(${i})" title="预览">👁️</button>
+        <button class="bb-item-btn" onclick="editCustomRoast(${i})" title="编辑">✏️</button>
+        <button class="bb-item-btn del" onclick="deleteCustomRoast(${i})" title="删除">🗑️</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function previewCustomRoast(idx) {
+  const r = STORE.customRoasts[idx];
+  if (!r) return;
+  closeBBEditor();
+  setTimeout(() => showRoast({...r, id: 100+idx, _custom: true}), 300);
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ==================== GIFT SYSTEM ====================
+function generateGiftCode() {
+  // 8-char alphanumeric code
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function giftCurrentRoast() {
+  const roast = window._currentRoast;
+  if (!roast) return;
+  const code = generateGiftCode();
+  // Save gift
+  const gifts = [...STORE.giftHistory];
+  gifts.unshift({ code, roast: { emoji:roast.emoji, title:roast.title, subtitle:roast.subtitle, tag:roast.tag, bg:roast.bg, anim:roast.anim }, createdAt: Date.now() });
+  if (gifts.length > 50) gifts.length = 50; // Keep max 50
+  STORE.giftHistory = gifts;
+
+  // Show gift overlay
+  closeRoast();
+  setTimeout(() => {
+    $('giftEmoji').textContent = roast.emoji;
+    $('giftTitle').textContent = roast.title;
+    $('giftSub').textContent = roast.subtitle;
+    $('giftFrom').textContent = '— 来自你的好友 —';
+    $('giftCode').textContent = code;
+    $('bbGiftOverlay').classList.add('show');
+    playSound('boing'); vibrate([30,20,50]);
+  }, 300);
+}
+
+function giftCustomRoast(idx) {
+  const r = STORE.customRoasts[idx];
+  if (!r) return;
+  const code = generateGiftCode();
+  const gifts = [...STORE.giftHistory];
+  gifts.unshift({ code, roast: { emoji:r.emoji, title:r.title, subtitle:r.subtitle, tag:r.tag, bg:r.bg, anim:r.anim }, createdAt: Date.now() });
+  if (gifts.length > 50) gifts.length = 50;
+  STORE.giftHistory = gifts;
+
+  $('giftEmoji').textContent = r.emoji;
+  $('giftTitle').textContent = r.title;
+  $('giftSub').textContent = r.subtitle;
+  $('giftFrom').textContent = '— 来自你 —';
+  $('giftCode').textContent = code;
+  $('bbGiftOverlay').classList.add('show');
+  playSound('boing'); vibrate([30,20,50]);
+}
+
+function closeGiftOverlay() {
+  $('bbGiftOverlay').classList.remove('show');
+  // Return to wherever we were from
+  openBlindBox();
+}
+
+function copyGiftCode() {
+  const code = $('giftCode').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(() => showToast('📋 礼物码已复制！'));
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+    showToast('📋 礼物码已复制！');
+  }
+}
+
+async function shareGiftNative() {
+  const code = $('giftCode').textContent;
+  const roast = {
+    emoji: $('giftEmoji').textContent,
+    title: $('giftTitle').textContent,
+    sub: $('giftSub').textContent,
+  };
+
+  // Generate a simple text to share
+  const text = `${roast.emoji} 你收到一份嘲讽礼物！\n「${roast.title}」\n${roast.sub}\n\n🎁 礼物码：${code}\n在「无聊了么」App盲盒中兑换即可收到`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '收到一份嘲讽礼物！', text });
+      showToast('📤 已发送！');
+      return;
+    } catch(e) { /* user cancelled */ }
+  }
+  // Fallback: copy to clipboard
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(text);
+    showToast('📋 已复制到剪贴板，去发给好友吧！');
+  } else {
+    copyGiftCode();
+  }
+}
+
+function redeemGift() {
+  const code = $('redeemInput').value.trim().toUpperCase();
+  if (!code || code.length < 4) { showToast('❌ 请输入有效的礼物码'); return; }
+
+  // Check against all gifts we've created (local)
+  const gifts = STORE.giftHistory;
+  const gift = gifts.find(g => g.code === code);
+  if (!gift) {
+    showToast('❌ 礼物码无效或已过期');
+    return;
+  }
+
+  // Check if already redeemed
+  const received = STORE.receivedGifts;
+  if (received.includes(code)) {
+    showToast('⚠️ 你已经兑换过这个礼物了');
+    return;
+  }
+
+  // Add to received and add roast to custom collection
+  STORE.receivedGifts = [...received, code];
+
+  const roast = gift.roast;
+  const customs = [...STORE.customRoasts];
+  if (customs.length < 10) {
+    customs.push({ ...roast, createdAt: Date.now(), _received: true });
+    STORE.customRoasts = customs;
+  }
+
+  $('redeemInput').value = '';
+  renderCustomRoastList();
+  renderGiftHistory();
+  updateBBCounter();
+
+  // Show the roast
+  closeBBEditor();
+  setTimeout(() => {
+    showRoast({ ...roast, id: 200, _custom: true });
+    showToast('🎁 恭喜收到好友的嘲讽礼物！');
+  }, 300);
+}
+
+function renderGiftHistory() {
+  const gifts = STORE.giftHistory.slice(0, 10);
+  const received = STORE.receivedGifts;
+  if (gifts.length === 0) {
+    $('giftHistoryList').innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:10px 0">暂无礼物记录</div>';
+    return;
+  }
+  $('giftHistoryList').innerHTML = gifts.map(g => {
+    const isRedeemed = received.includes(g.code);
+    const date = new Date(g.createdAt).toLocaleDateString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    return `<div class="bb-gift-item">
+      <span>${g.roast.emoji}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(g.roast.title)}</span>
+      <span style="font-family:monospace;font-size:10px;color:var(--gold)">${g.code}</span>
+      <span style="font-size:10px;${isRedeemed?'color:var(--green)':'color:var(--muted)'}">${isRedeemed?'已兑换':'未兑换'}</span>
+      <span class="gift-date">${date}</span>
+    </div>`;
+  }).join('');
+}
+
+// Also update collection page to show custom roasts
+const origBuildCollection = buildCollectionPage;
+buildCollectionPage = function() {
+  origBuildCollection();
+  // Append custom roasts to bbRoastList
+  const customs = STORE.customRoasts;
+  if (customs.length > 0) {
+    const list = $('bbRoastList');
+    list.innerHTML += customs.map((r, i) =>
+      `<div class="bb-roast-item collected" style="border-color:rgba(0,255,136,.25)">
+        <span>${r.emoji}</span>
+        <span>${escHtml(r.title)}</span>
+        <span style="font-size:9px;color:var(--green);margin-left:auto">自</span>
+      </div>`
+    ).join('');
+  }
+};
+
+// ==================== REPLAY ====================
+function replay() { if (!isAnimating) playRandom(); }
+mainText.addEventListener('click', () => { if (!isAnimating) playRandom(); });
+
+// ==================== BACKGROUND PARTICLES ====================
+function initParticles() {
+  const canvas = particlesCanvas, ctx = canvas.getContext('2d');
+  let w, h; const pts = [];
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const colors = ['#FF6B35','#FF3B8B','#FFD700','#00FF88','#00AAFF','#FF00FF'];
+  for (let i = 0; i < 50; i++) {
+    pts.push({ x:Math.random()*w, y:Math.random()*h, r:Math.random()*2+.5, vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4, alpha:Math.random()*.5+.1, color:colors[Math.floor(Math.random()*6)] });
+  }
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    if (!particlesRunning) { requestAnimationFrame(draw); return; } // Skip but keep loop
+    pts.forEach(p => { p.x+=p.vx; p.y+=p.vy; if(p.x<0)p.x=w; if(p.x>w)p.x=0; if(p.y<0)p.y=h; if(p.y>h)p.y=0; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=p.color; ctx.globalAlpha=p.alpha; ctx.fill(); });
+    ctx.globalAlpha=1;
+    pts.forEach((a,i)=>{ pts.slice(i+1).forEach(b=>{ const dx=a.x-b.x,dy=a.y-b.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<120){ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.strokeStyle=a.color; ctx.globalAlpha=.06*(1-dist/120); ctx.lineWidth=.5; ctx.stroke(); } }); });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ==================== STARTUP ====================
+init();
+initShakeDetection();
+
+// ==================== SERVICE WORKER REGISTRATION ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>
