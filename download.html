@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无聊了么 - 下载</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0a0a2e;color:#fff;min-height:100vh;overflow-x:hidden}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 20%,rgba(99,102,241,.3),transparent 70%),radial-gradient(ellipse at 80% 80%,rgba(236,72,153,.2),transparent 60%);pointer-events:none}
+.logo{width:120px;height:120px;border-radius:28px;background:linear-gradient(135deg,#6366f1,#ec4899);display:flex;align-items:center;justify-content:center;font-size:60px;margin-bottom:24px;box-shadow:0 20px 60px rgba(99,102,241,.4);animation:float 3s ease-in-out infinite;position:relative;z-index:1}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+h1{font-size:2.5em;font-weight:800;background:linear-gradient(135deg,#6366f1,#ec4899,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;position:relative;z-index:1}
+.subtitle{color:#94a3b8;font-size:1.1em;margin-bottom:40px;max-width:400px;position:relative;z-index:1}
+.downloads{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;max-width:600px;position:relative;z-index:1}
+.dl-card{flex:1;min-width:260px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;cursor:pointer;transition:all .3s;text-decoration:none;color:#fff;backdrop-filter:blur(10px)}
+.dl-card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.25);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+.dl-icon{font-size:48px;margin-bottom:16px;display:block}
+.dl-title{font-size:1.2em;font-weight:700;margin-bottom:4px}
+.dl-desc{color:#94a3b8;font-size:.85em;margin-bottom:16px}
+.dl-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 24px;border-radius:12px;font-weight:600;font-size:.9em;transition:all .2s;border:none;cursor:pointer}
+.dl-btn-android{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+.dl-btn-android:hover{filter:brightness(1.15);transform:scale(1.05)}
+.dl-btn-ios{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
+.dl-btn-hm{background:linear-gradient(135deg,#ec4899,#be185d);color:#fff}
+.dl-btn-web{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.features{padding:60px 20px;max-width:800px;margin:0 auto}
+.features h2{text-align:center;font-size:1.8em;margin-bottom:40px;background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.feat-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;text-align:center;transition:all .3s}
+.feat-item:hover{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.08)}
+.feat-emoji{font-size:36px;margin-bottom:12px}
+.feat-title{font-weight:700;margin-bottom:4px}
+.feat-desc{color:#64748b;font-size:.85em}
+.footer{text-align:center;padding:40px 20px;color:#475569;font-size:.8em;border-top:1px solid rgba(255,255,255,.06)}
+.stats{display:flex;gap:40px;justify-content:center;margin:30px 0;position:relative;z-index:1}
+.stat{text-align:center}
+.stat-num{font-size:2em;font-weight:800;background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{color:#64748b;font-size:.85em}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.75em;font-weight:600;margin-bottom:16px;position:relative;z-index:1}
+.badge-stable{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+@media(max-width:480px){h1{font-size:1.8em}.downloads{flex-direction:column}.dl-card{min-width:auto}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo">🎲</div>
+  <div class="badge badge-stable">v1.0.0 Stable</div>
+  <h1>无聊了么</h1>
+  <p class="subtitle">100款爆笑鞭策动画 + 盲盒收集 + 社交分享，专治各种摸鱼拖延症</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-num">100</div><div class="stat-label">鞭策动画</div></div>
+    <div class="stat"><div class="stat-num">32</div><div class="stat-label">入场特效</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">端平台</div></div>
+  </div>
+  <div class="downloads">
+    <div class="dl-card" onclick="downloadAPK()">
+      <span class="dl-icon">🤖</span>
+      <div class="dl-title">Android</div>
+      <div class="dl-desc">已签名 Release 版本，直接安装</div>
+      <button class="dl-btn dl-btn-android">⬇ 下载 APK (3.1MB)</button>
+    </div>
+    <div class="dl-card" onclick="openPWA()">
+      <span class="dl-icon">🌐</span>
+      <div class="dl-title">Web PWA</div>
+      <div class="dl-desc">无需安装，添加到主屏幕即可</div>
+      <button class="dl-btn dl-btn-web">🚀 立即体验</button>
+    </div>
+  </div>
+</div>
+<div class="features">
+  <h2>核心功能</h2>
+  <div class="feat-grid">
+    <div class="feat-item"><div class="feat-emoji">🎁</div><div class="feat-title">盲盒开箱</div><div class="feat-desc">100款随机鞭策动画，每次都有惊喜</div></div>
+    <div class="feat-item"><div class="feat-emoji">✏️</div><div class="feat-title">自定义创作</div><div class="feat-desc">编辑自己的嘲讽语，32种动画可选</div></div>
+    <div class="feat-item"><div class="feat-emoji">📤</div><div class="feat-title">社交分享</div><div class="feat-desc">Canvas生成分享卡片，打击好友</div></div>
+    <div class="feat-item"><div class="feat-emoji">🎁</div><div class="feat-title">送礼系统</div><div class="feat-desc">生成礼物码，送给朋友开盲盒</div></div>
+    <div class="feat-item"><div class="feat-emoji">🍅</div><div class="feat-title">番茄钟</div><div class="feat-desc">专注计时 + 励志语录激励</div></div>
+    <div class="feat-item"><div class="feat-emoji">📚</div><div class="feat-title">收集系统</div><div class="feat-desc">收集全部100款动画，解锁成就</div></div>
+  </div>
+</div>
+<div class="footer">
+  <p>无聊了么 v1.0.0 | Capacitor + PWA | 2026</p>
+  <p style="margin-top:8px">🍎 iOS 版本需要 macOS + Xcode 编译 | 🪐 鸿蒙版本需要 DevEco Studio 编译</p>
+</div>
+<script>
+function downloadAPK(){
+  const a=document.createElement('a');
+  a.href='./无聊了么-v1.0.0-android-release.apk';
+  a.download='无聊了么-v1.0.0-android-release.apk';
+  a.click();
+}
+function openPWA(){
+  window.open('./index.html','_blank');
+}
+</script>
+</body>
+</html>
